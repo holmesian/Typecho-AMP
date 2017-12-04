@@ -16,6 +16,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
     {
 	    Typecho_Plugin::factory('Widget_Archive')->header = array('AMP_Action','headlink');
 	    Helper::addRoute('amp_map', '/amp/[slug]', 'AMP_Action', 'AMPpage');
+        Helper::addRoute('amp_sitemap', '/amp_sitemap.xml', 'AMP_Action', 'ampsitemap');
     }
 	
 
@@ -37,6 +38,9 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	
 	    $element = new Typecho_Widget_Helper_Form_Element_Text('LOGO', null, 'https://holmesian.org/usr/themes/Holmesian/images/holmesian.png' , _t('默认LOGO地址'), '根据AMP的限制，尺寸最大不超过60*60');
 	    $form->addInput($element);
+
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('SiteMap', array(0 => '不开启', 1 => '开启'), 1, _t('是否开启AMP的SiteMap'),'未开启Rewrite的地址在http://xxx/index.php/amp_sitemap.xml，开启Rewrite的地址在http://xxx/amp_sitemap.xml');
+        $form->addInput($element);
    
     }
 
