@@ -9,14 +9,17 @@
 
 ## 功能
 
- 自动生成符合Google AMP/Baidu MIP标准的AMP/MIP页面，并与标准页面建立关联。
+ 生成符合Google AMP/Baidu MIP标准的AMP/MIP页面，并与标准页面建立关联。
 
- 自动生成AMP/MIP的SiteMap，方便统一提交。
+ 自动生成AMP/MIP的SiteMap，方便提交。
+ 
+ 可在后台批量提交URL到Baidu。
 
 
 ## 安装
 
 将文件夹重命名为`AMP`，然后拷贝至`usr/plugins/`下，最后在后台->插件处安装。
+
 
 ## 升级方法
 
@@ -26,7 +29,10 @@
 
 到插件后台设置默认LOGO和默认图片，以及选择是否开启SiteMap功能（默认开启）。
 
+到百度站长获取接口调用地址，填写到设置指定位置（使用批量提交URL功能时需要）。
 
+
+---
 
 启用Rewrite之后
 
