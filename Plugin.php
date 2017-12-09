@@ -1,10 +1,10 @@
 <?php
 /**
- * AMP 插件 for Typecho
+ * AMP/MIP 插件 for Typecho
  *
- * @package AMP
+ * @package AMP-MIP
  * @author Holmesian
- * @version 0.1
+ * @version 0.2
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
