@@ -333,7 +333,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     private function MIPInit($text)
     {
-        $text = str_replace('<img', '<mip-img width="700" height="1300" layout="responsive" ', $text);
+    	$text=$this->IMGsize($text);
+        $text = str_replace('<img', '<mip-img  layout="responsive" ', $text);
         $text = str_replace('img>', 'mip-img>', $text);
         $text = str_replace('<!- toc end ->', '', $text);
         $text = str_replace('javascript:content_index_toggleToc()', '#', $text);
@@ -342,12 +343,28 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     private function AMPInit($text)
     {
-        $text = str_replace('<img', '<amp-img width="700" height="1300" layout="responsive" ', $text);
+		$text=$this->IMGsize($text);
+        $text = str_replace('<img', '<amp-img  layout="responsive" ', $text);
         $text = str_replace('img>', 'amp-img>', $text);
         $text = str_replace('<!- toc end ->', '', $text);
         $text = str_replace('javascript:content_index_toggleToc()', '#', $text);
         return $text;
     }
+
+    private function IMGsize($html){
+		$html = preg_replace_callback(
+			'(<img src="(.*?)")',
+			function ($m) {
+				list($width, $height, $type, $attr) =getimagesize($m[1]);
+				if(!isset($width)){$width='500';}
+				if(!isset($height)){$height='700';}
+				return "<img width=\"{$width}\" height=\"{$height}\" src=\"{$m[1]}\"";
+			},
+			$html
+		);
+		return $html;
+	}
+	
 
 }
 
