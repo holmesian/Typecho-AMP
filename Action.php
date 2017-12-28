@@ -23,6 +23,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $mipurl = '';
         if ($widget->is('post')) {
             $slug = $widget->request->slug;
+            if(!isset($slug)){$slug=$widget->request->cid;}
             $fullURL = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
             $ampurl = "<link rel=\"amphtml\" href=\"{$fullURL}\">\n";
             $fullURL = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
@@ -152,7 +153,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function MIPpage()
     {
-        $this->article = $this->getArticleBySlug();
+        $this->article = $this->getArticle();
 
         if ($this->article['isMarkdown']) {
             ?>
@@ -218,7 +219,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function AMPpage()
     {
-        $this->article = $this->getArticleBySlug();
+        $this->article = $this->getArticle();
 
         if ($this->article['isMarkdown']) {
             ?>
@@ -288,10 +289,15 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     }
 
-    public function getArticleBySlug()
+    public function getArticle()
     {
-        $select = $this->db->select()->from('table.contents')
-            ->where('slug = ?', $this->request->slug);
+        if(preg_match("/^\d*$/",$this->request->slug)) {
+            $select = $this->db->select()->from('table.contents')
+                ->where('cid = ?', $this->request->slug);
+        }else{
+            $select = $this->db->select()->from('table.contents')
+                ->where('slug = ?', $this->request->slug);
+        }
 
         $article_src = $this->db->fetchRow($select);
 
@@ -364,7 +370,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 		);
 		return $html;
 	}
-	
+
 
 }
 
