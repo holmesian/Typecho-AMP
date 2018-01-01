@@ -8,12 +8,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->LOGO = Helper::options()->plugin('AMP')->LOGO;
         $this->defaultPIC = Helper::options()->plugin('AMP')->defaultPIC;
         $this->publisher = Helper::options()->title;
-        $this->action();
+        $this->db = Typecho_Db::get();
     }
 
     public function action()
     {
-        $this->db = Typecho_Db::get();
+
     }
 
     public static function headlink()
@@ -32,6 +32,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $headurl=$ampurl.$mipurl;
 
         echo $headurl;
+    }
+
+    public static function AMPlist(){
+        //TODO
+
     }
 
     public static function ampsitemap()
@@ -361,7 +366,17 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 		$html = preg_replace_callback(
 			'(<img src="(.*?)")',
 			function ($m) {
-				list($width, $height, $type, $attr) =getimagesize($m[1]);
+                if(isset(parse_url($m[1])['scheme'])){//Fix 相对路径与绝对路径附件的问题
+                    if( parse_url($m[1])['host'] == parse_url(Helper::options()->siteUrl)['host'] ){
+                        $url=$_SERVER['DOCUMENT_ROOT'].parse_url($m[1])['path'];
+                    }else{
+                        $url = $m[1];
+                    }
+                }else{
+                    $url =$_SERVER['DOCUMENT_ROOT'].$m[1];
+                }
+                list($width, $height, $type, $attr) =getimagesize($url);
+
 				if(!isset($width)){$width='500';}
 				if(!isset($height)){$height='700';}
 				return "<img width=\"{$width}\" height=\"{$height}\" src=\"{$m[1]}\"";
