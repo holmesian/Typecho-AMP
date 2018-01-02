@@ -5,15 +5,14 @@
 
 之前[直接通过暴力修改模板][1]实现的，结果发现有不少TX需要这个功能，所以整理了一下做成插件，方便使用。
 
-支持MarkDown书写的日志。
 
 ## 功能
 
- 生成符合Google AMP/Baidu MIP标准的AMP/MIP页面，并与标准页面建立关联。
+- 生成符合Google AMP/Baidu MIP标准的AMP/MIP页面，并与标准页面建立关联。
 
- 自动生成AMP/MIP的SiteMap，方便提交。
+- 生成AMP/MIP的SiteMap，方便提交。
  
- 可在后台批量提交URL到Baidu。
+- 后台批量提交URL到Baidu。
 
 
 ## 安装
@@ -24,6 +23,8 @@
 ## 升级方法
 
 **请先禁用插件后再升级**
+
+PS:0.3版本在路由注册时有一个的错误，可能会导致AMP页面出错。如果AMP页面出现了“Delete”空白页，请升级到0.3.5，**禁用再启用一次插件**进行修复。
 
 ## 使用
 
@@ -44,4 +45,4 @@ MIP页面为 http(s)://xxx/mip/slug/
 
 
   [1]: https://holmesian.org/typecho-upgrade-AMP
-  [1]: http://ziyuan.baidu.com/mip/index
+  [2]: http://ziyuan.baidu.com/mip/index
