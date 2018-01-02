@@ -15,7 +15,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
     public static function activate()
     {
 	    Typecho_Plugin::factory('Widget_Archive')->header = array('AMP_Action','headlink');
-//        Helper::addRoute('amp_index', '/amp/', 'AMP_Action', 'AMPpage');
+        Helper::addRoute('amp_index', '/ampindex/', 'AMP_Action', 'AMPindex');
 	    Helper::addRoute('amp_map', '/amp/[slug]', 'AMP_Action', 'AMPpage');
 	    Helper::addRoute('amp_list', '/amp/list/[list_id]', 'AMP_Action', 'AMPlist');
 	    Helper::addRoute('mip_map', '/mip/[slug]', 'AMP_Action', 'MIPpage');
