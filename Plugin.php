@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.3
+ * @version 0.3.5
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -15,6 +15,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
     public static function activate()
     {
 	    Typecho_Plugin::factory('Widget_Archive')->header = array('AMP_Action','headlink');
+//        Helper::addRoute('amp_index', '/amp/', 'AMP_Action', 'AMPpage');
 	    Helper::addRoute('amp_map', '/amp/[slug]', 'AMP_Action', 'AMPpage');
 	    Helper::addRoute('amp_list', '/amp/list/[list_id]', 'AMP_Action', 'AMPlist');
 	    Helper::addRoute('mip_map', '/mip/[slug]', 'AMP_Action', 'MIPpage');
@@ -64,11 +65,15 @@ class AMP_Plugin implements Typecho_Plugin_Interface
     public static function uninstall()
     {
         //删除路由、菜单
+        Helper::removeRoute('amp_index');
         Helper::removeRoute('amp_map');
-        Helper::removeRoute('mip_map');
+        Helper::removeRoute('amp_list');
         Helper::removeRoute('amp_sitemap');
+        Helper::removeRoute('mip_map');
         Helper::removeRoute('mip_sitemap');
         Helper::removePanel(1, 'AMP/Links.php');
+
+
 
     }
 	
