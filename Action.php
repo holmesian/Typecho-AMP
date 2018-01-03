@@ -382,7 +382,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         echo "\t\t<changefreq>daily</changefreq>\n";
         echo "\t\t<priority>1</priority>\n";
         echo "\t</url>\n";
-        
+    
+        $router=explode('/',Helper::options()->routingTable['post']['url']);
+        $slugtemp=$router[count($router)-1];
+        if(empty($slugtemp)){
+            $slugtemp=$router[count($router)-2];
+        }
         foreach ($articles AS $article) {
             $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
                 ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
@@ -397,14 +402,9 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             $article['day'] = $article['date']->day;
 //            $article['permalink'] = Typecho_Common::url($article['pathinfo'], Helper::options()->index);
             
-            $router=explode('/',Helper::options()->routingTable['post']['url']);
-            $slug=$router[count($router)-1];
-            if(empty($slug)){
-                $slug=$router[count($router)-2];
-            }
-            $slug = str_replace('[slug]',$article['slug'],$slug);
-            $slug = str_replace('[cid:digital]',$article['cid'],$slug);
             
+            $slug = str_replace('[slug]',$article['slug'],$slugtemp);
+            $slug = str_replace('[cid:digital]',$article['cid'],$slug);
             
             if($maptype=='mip'){
                 $article['permalink'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);

@@ -29,21 +29,29 @@ if (isset($_GET['send'])) {
 
     $articles = $db->fetchAll($db->select()->from('table.contents')
         ->where('table.contents.status = ?', 'publish')
-        ->where('table.contents.created < ?', $options->gmtTime)
         ->where('table.contents.type = ?', 'post')
         ->page($page, 20)
         ->order('table.contents.created', Typecho_Db::SORT_DESC));
 
     $urls = array();
+    
+    $router=explode('/',Helper::options()->routingTable['post']['url']);
+    $slugtemp=$router[count($router)-1];
+    if(empty($slugtemp)){
+        $slugtemp=$router[count($router)-2];
+    }
+    
     foreach ($articles AS $article) {
-        $type = $article['type'];
-        $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
-            ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
-            ->where('table.relationships.cid = ?', $article['cid'])
-            ->where('table.metas.type = ?', 'category')
-            ->order('table.metas.order', Typecho_Db::SORT_ASC));
-
-        $article['permalink'] = Typecho_Common::url("{$sendtype}/{$article['slug']}", $options->index);
+//        $type = $article['type'];
+//        $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
+//            ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
+//            ->where('table.relationships.cid = ?', $article['cid'])
+//            ->where('table.metas.type = ?', 'category')
+//            ->order('table.metas.order', Typecho_Db::SORT_ASC));
+    
+        $slug = str_replace('[slug]',$article['slug'],$slugtemp);
+        $slug = str_replace('[cid:digital]',$article['cid'],$slug);
+        $article['permalink'] = Typecho_Common::url("{$sendtype}/{$slug}", Helper::options()->index);
         echo '正在提交:' . $article['permalink'] . '  <br>';
         $urls[] = $article['permalink'];
     }
