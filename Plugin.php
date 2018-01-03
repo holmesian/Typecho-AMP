@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.3.5
+ * @version 0.3.6
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -72,8 +72,6 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         Helper::removeRoute('mip_map');
         Helper::removeRoute('mip_sitemap');
         Helper::removePanel(1, 'AMP/Links.php');
-
-
 
     }
 	

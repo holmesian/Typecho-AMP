@@ -18,6 +18,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->siteurl=Helper::options()->index;
         $this->siteurl=str_replace("https://","//",$this->siteurl);
         $this->siteurl=str_replace("http://","//",$this->siteurl);
+        
     }
 
 
@@ -26,11 +27,17 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $widget = Typecho_Widget::widget('Widget_Archive');
         $ampurl = '';
         $mipurl = '';
+        $router=explode('/',Helper::options()->routingTable['post']['url']);
+        $slug=$router[count($router)-1];
+        if(empty($slug)){
+            $slug=$router[count($router)-2];
+        }
+        
         if ($widget->is('post')) {
-            $slug = $widget->request->slug;
-            if(!isset($slug)){$slug=$widget->request->cid;}
+            $slug = str_replace('[slug]',$widget->request->slug,$slug);
+            $slug = str_replace('[cid:digital]',$widget->request->cid,$slug);
             $fullURL = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
-            $ampurl = "<link rel=\"amphtml\" href=\"{$fullURL}\">\n";
+            $ampurl = "\n<link rel=\"amphtml\" href=\"{$fullURL}\">\n";
             $fullURL = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
             $mipurl = "<link rel=\"miphtml\" href=\"{$fullURL}\">\n";
         }
@@ -40,112 +47,29 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     }
 
 
-    public static function ampsitemap()
+    public function ampsitemap()
     {
 
         if (Helper::options()->plugin('AMP')->ampSiteMap == 0) {
             die('未开启ampSiteMap功能！');
         }
-
-        $db = Typecho_Db::get();
-
-        $articles = $db->fetchAll($db->select()->from('table.contents')
-            ->where('table.contents.status = ?', 'publish')
-            ->where('table.contents.type = ?', 'post')
-            ->order('table.contents.created', Typecho_Db::SORT_DESC));
-
-        //changefreq -> always、hourly、daily、weekly、monthly、yearly、never
-        //priority -> 0.0优先级最低、1.0最高
-        header("Content-Type: application/xml");
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
-
-        echo "\t<url>\n";
-        echo "\t\t<loc>Helper::options()->rootUrl</loc>\n";
-        echo "\t\t<lastmod>" . date('Y-m-d') . "</lastmod>\n";
-        echo "\t\t<changefreq>daily</changefreq>\n";
-        echo "\t\t<priority>1</priority>\n";
-        echo "\t</url>\n";
-
-        foreach ($articles AS $article) {
-            $type = $article['type'];
-            $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
-                ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
-                ->where('table.relationships.cid = ?', $article['cid'])
-                ->where('table.metas.type = ?', 'category')
-                ->order('table.metas.order', Typecho_Db::SORT_ASC));
-            $article['category'] = urlencode(current(Typecho_Common::arrayFlatten($article['categories'], 'slug')));
-            $article['slug'] = urlencode($article['slug']);
-            $article['date'] = new Typecho_Date($article['created']);
-            $article['year'] = $article['date']->year;
-            $article['month'] = $article['date']->month;
-            $article['day'] = $article['date']->day;
-            $article['permalink'] = Typecho_Common::url("amp/{$article['slug']}", Helper::options()->index);
-
-            echo "\t<url>\n";
-            echo "\t\t<loc>" . $article['permalink'] . "</loc>\n";
-            echo "\t\t<lastmod>" . date('Y-m-d', $article['modified']) . "</lastmod>\n";
-            echo "\t\t<changefreq>monthly</changefreq>\n";
-            echo "\t\t<priority>0.5</priority>\n";
-            echo "\t</url>\n";
-        }
-        echo "</urlset>";
+    
+        $this->MakeArticle('amp');
 
     }
-
-    public static function mipsitemap()
+    
+    public function mipsitemap()
     {
-
+        
         if (Helper::options()->plugin('AMP')->mipSiteMap == 0) {
             die('未开启mipSiteMap功能！');
         }
-
-        $db = Typecho_Db::get();
-
-        $articles = $db->fetchAll($db->select()->from('table.contents')
-            ->where('table.contents.status = ?', 'publish')
-            ->where('table.contents.type = ?', 'post')
-            ->order('table.contents.created', Typecho_Db::SORT_DESC));
-
-        //changefreq -> always、hourly、daily、weekly、monthly、yearly、never
-        //priority -> 0.0优先级最低、1.0最高
-        header("Content-Type: application/xml");
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
-
-        echo "\t<url>\n";
-        echo "\t\t<loc>Helper::options()->rootUrl</loc>\n";
-        echo "\t\t<lastmod>" . date('Y-m-d') . "</lastmod>\n";
-        echo "\t\t<changefreq>daily</changefreq>\n";
-        echo "\t\t<priority>1</priority>\n";
-        echo "\t</url>\n";
-
-        foreach ($articles AS $article) {
-            $type = $article['type'];
-            $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
-                ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
-                ->where('table.relationships.cid = ?', $article['cid'])
-                ->where('table.metas.type = ?', 'category')
-                ->order('table.metas.order', Typecho_Db::SORT_ASC));
-            $article['category'] = urlencode(current(Typecho_Common::arrayFlatten($article['categories'], 'slug')));
-            $article['slug'] = urlencode($article['slug']);
-            $article['date'] = new Typecho_Date($article['created']);
-            $article['year'] = $article['date']->year;
-            $article['month'] = $article['date']->month;
-            $article['day'] = $article['date']->day;
-//            $article['permalink'] = Typecho_Common::url($article['pathinfo'], Helper::options()->index);
-            $article['permalink'] = Typecho_Common::url("mip/{$article['slug']}", Helper::options()->index);
-
-            echo "\t<url>\n";
-            echo "\t\t<loc>" . $article['permalink'] . "</loc>\n";
-            echo "\t\t<lastmod>" . date('Y-m-d', $article['modified']) . "</lastmod>\n";
-            echo "\t\t<changefreq>monthly</changefreq>\n";
-            echo "\t\t<priority>0.5</priority>\n";
-            echo "\t</url>\n";
-        }
-        echo "</urlset>";
-
+        
+        $this->MakeArticle('mip');
+        
     }
+    
+    
 
     public function MIPpage()
     {
@@ -219,6 +143,10 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             array('title'=>'aaa','url'=>'http://aaa.com','content'=>'sdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf'),
             array('title'=>'sss','url'=>'http://sss.com','content'=>'sdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf'));
         $arr = array ('items'=>$post_list);
+        $router_rule=explode('/',Helper::options()->routingTable['post']['url']);
+        $aa=$router_rule[count($router_rule)-1];
+        $bb=explode('.',$aa);
+        var_dump($bb);
         echo json_encode($arr);
 
     }
@@ -344,12 +272,13 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function getArticle()
     {
-        if(preg_match("/^\d*$/",$this->request->slug)) {
+        $slug=explode('.',$this->request->slug)[0];
+        if(preg_match("/^\d*$/",$slug)) {
             $select = $this->db->select()->from('table.contents')
-                ->where('cid = ?', $this->request->slug);
+                ->where('cid = ?', $slug);
         }else{
             $select = $this->db->select()->from('table.contents')
-                ->where('slug = ?', $this->request->slug);
+                ->where('slug = ?', $slug);
         }
 
         $article_src = $this->db->fetchRow($select);
@@ -432,7 +361,67 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 		);
 		return $html;
 	}
-
+    
+    private function MakeArticle($maptype='amp'){
+        $db = Typecho_Db::get();
+        $articles = $db->fetchAll($db->select()->from('table.contents')
+            ->where('table.contents.status = ?', 'publish')
+            ->where('table.contents.type = ?', 'post')
+            ->order('table.contents.created', Typecho_Db::SORT_DESC));
+        
+        //changefreq -> always、hourly、daily、weekly、monthly、yearly、never
+        //priority -> 0.0优先级最低、1.0最高
+        $root_url=Helper::options()->rootUrl;
+        header("Content-Type: application/xml");
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        echo "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
+        
+        echo "\t<url>\n";
+        echo "\t\t<loc>{$root_url}</loc>\n";
+        echo "\t\t<lastmod>" . date('Y-m-d') . "</lastmod>\n";
+        echo "\t\t<changefreq>daily</changefreq>\n";
+        echo "\t\t<priority>1</priority>\n";
+        echo "\t</url>\n";
+        
+        foreach ($articles AS $article) {
+            $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
+                ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
+                ->where('table.relationships.cid = ?', $article['cid'])
+                ->where('table.metas.type = ?', 'category')
+                ->order('table.metas.order', Typecho_Db::SORT_ASC));
+            $article['category'] = urlencode(current(Typecho_Common::arrayFlatten($article['categories'], 'slug')));
+            $article['slug'] = urlencode($article['slug']);
+            $article['date'] = new Typecho_Date($article['created']);
+            $article['year'] = $article['date']->year;
+            $article['month'] = $article['date']->month;
+            $article['day'] = $article['date']->day;
+//            $article['permalink'] = Typecho_Common::url($article['pathinfo'], Helper::options()->index);
+            
+            $router=explode('/',Helper::options()->routingTable['post']['url']);
+            $slug=$router[count($router)-1];
+            if(empty($slug)){
+                $slug=$router[count($router)-2];
+            }
+            $slug = str_replace('[slug]',$article['slug'],$slug);
+            $slug = str_replace('[cid:digital]',$article['cid'],$slug);
+            
+            
+            if($maptype=='mip'){
+                $article['permalink'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
+            }else{
+                $article['permalink'] = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
+            }
+            echo "\t<url>\n";
+            echo "\t\t<loc>" . $article['permalink'] . "</loc>\n";
+            echo "\t\t<lastmod>" . date('Y-m-d', $article['modified']) . "</lastmod>\n";
+            echo "\t\t<changefreq>monthly</changefreq>\n";
+            echo "\t\t<priority>0.5</priority>\n";
+            echo "\t</url>\n";
+        }
+        echo "</urlset>";
+        
+    }
+    
 
 }
 
