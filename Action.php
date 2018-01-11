@@ -15,9 +15,9 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->defaultPIC = Helper::options()->plugin('AMP')->defaultPIC;
         $this->publisher = Helper::options()->title;
         $this->db = Typecho_Db::get();
-        $this->siteurl=Helper::options()->index;
-        $this->siteurl=str_replace("https://","//",$this->siteurl);
-        $this->siteurl=str_replace("http://","//",$this->siteurl);
+        $this->baseurl=Helper::options()->index;
+        $this->baseurl=str_replace("https://","//",$this->baseurl);
+        $this->baseurl=str_replace("http://","//",$this->baseurl);
         
     }
 
@@ -31,6 +31,13 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $slug=$router[count($router)-1];
         if(empty($slug)){
             $slug=$router[count($router)-2];
+        }
+        
+        if ($widget->is('index')){
+            if (Helper::options()->plugin('AMP')->ampIndex == 1) {
+                $fullURL = Typecho_Common::url("ampindex", Helper::options()->index);
+                $ampurl = "\n<link rel=\"amphtml\" href=\"{$fullURL}\">\n";
+            }
         }
         
         if ($widget->is('post')) {
@@ -54,7 +61,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             die('未开启ampSiteMap功能！');
         }
     
-        $this->MakeArticle('amp');
+        $this->MakeSiteMap('amp');
 
     }
     
@@ -65,7 +72,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             die('未开启mipSiteMap功能！');
         }
         
-        $this->MakeArticle('mip');
+        $this->MakeSiteMap('mip');
         
     }
     
@@ -138,60 +145,105 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     }
 
     public function AMPlist(){
-        //TODO
-        $post_list=array(
-            array('title'=>'aaa','url'=>'http://aaa.com','content'=>'sdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf'),
-            array('title'=>'sss','url'=>'http://sss.com','content'=>'sdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdfsdf'));
-        $arr = array ('items'=>$post_list);
-        $router_rule=explode('/',Helper::options()->routingTable['post']['url']);
-        $aa=$router_rule[count($router_rule)-1];
-        $bb=explode('.',$aa);
-        var_dump($bb);
+        if (Helper::options()->plugin('AMP')->ampIndex == 0) {
+            die('未开启AMP版首页！');
+        }
+        $currentPage=$this->request->list_id;
+        $articles=$this->MakeArticleList('amp',$currentPage,5);
+//        var_dump();
+        $article_data=array(
+            'pageCount'=>ceil($this->_total/5),
+            'currentPage'=>$currentPage,
+        );
+        $article_data['article']=array();
+        foreach($articles as $article){
+            if (isset($article['text'])) {
+                $article['isMarkdown'] = (0 === strpos($article['text'], '<!--markdown-->'));
+                if ($article['isMarkdown']) {
+                    $article['text'] = substr($article['text'], 15);
+                }
+            }
+            if($article['isMarkdown']){
+                $article['text']=$html = Markdown::convert($article['text']);
+            }
+            $article_data['article'][]=array(
+                'title'=>$article['title'],
+                'url'=>$article['permalink'],
+                'content'=>$this->substr_format(strip_tags($article['text']),200),
+            );
+        }
+        $arr = array ('items'=>$article_data);
         echo json_encode($arr);
 
     }
 
     public function AMPindex(){
+        if (Helper::options()->plugin('AMP')->ampIndex == 0) {
+            die('未开启AMP版首页！');
+        }
         ?>
         <!doctype html>
         <html amp lang="zh">
         <head>
-        <meta charset="utf-8">
-        <script async src="https://cdn.ampproject.org/v0.js"></script>
+            <meta charset="utf-8">
+            <script async src="https://cdn.ampproject.org/v0.js"></script>
             <script async custom-element="amp-list" src="https://cdn.ampproject.org/v0/amp-list-0.1.js"></script>
-        <script async custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.1.js"></script>
-        <title><?php print($this->publisher." -- AMP Version"); ?></title>
-        <link rel="canonical" href="<?php Helper::options()->siteUrl(); ?>"/>
-        <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
-            <style amp-custom>.article-list{margin-top:6px;} .header{background-color:#fff;box-shadow:0 10px 0 0 rgba(0,0,0,0.1);box-sizing:border-box;font-size:14px;padding:15px 15px;width:100%}.footer{font-size:.9em;padding:15px 0 25px;text-align:center;width:auto}.header h1{font-size:30px;font-weight:400;line-height:30px;margin:15px 0px}.menu-list li a,.menu-list li span{border-bottom:solid 1px #ededed;color:#000;display:block;font-size:18px;height:60px;line-height:60px;text-align:center;width:86px}.header h1 a{color:#333} .articel{position: relative;padding: 30px 0;border-top: 1px solid #fff;border-bottom: 1px solid #ddd;width: auto;} *{margin:0;padding:0}html,body{height:100%}body{background:#fff;color:#666;font-size:14px;font-family:"-apple-system","Open Sans","HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,sans-serif}::selection,::-moz-selection,::-webkit-selection{background-color:#2479CC;color:#eee}h1{font-size:1.5em}h3{font-size:1.3em}h4{font-size:1.1em}a{color:#2479CC;text-decoration:none} .expire-tips{background-color:#f5d09a;border:1px solid #e2e2e2;border-left:5px solid #fff000;color:#333;font-size:15px;padding:5px 10px;margin:20px 0px}article .post-info,article .entry-content .date{font-size:14px}article .entry-content blockquote,article .entry-content ul,article .entry-content ol,article .entry-content dl,article .entry-content table,article .entry-content h1,article .entry-content h2,article .entry-content h3,article .entry-content h4,article .entry-content h5,article .entry-content h6,article .entry-content pre{margin-top:15px}article pre b.name{color:#eee;font-family:"Consolas","Liberation Mono",Courier,monospace;font-size:60px;line-height:1;pointer-events:none;position:absolute;right:10px;top:10px}article .entry-content .date{color:#999}article .entry-content ul ul,article .entry-content ul ol,article .entry-content ul dl,article .entry-content ol ul,article .entry-content ol ol,article .entry-content ol dl,article .entry-content dl ul,article .entry-content dl ol,article .entry-content dl dl,article .entry-content blockquote > p:first-of-type{margin-top:0}article .entry-content ul,article .entry-content ol,article .entry-content dl{margin-left:25px}</style>
+            <script async custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.1.js"></script>
+            <script async custom-element="amp-bind" src="https://cdn.ampproject.org/v0/amp-bind-0.1.js"></script>
+            <title><?php print($this->publisher." -- AMP Version"); ?></title>
+            <link rel="canonical" href="<?php Helper::options()->siteUrl(); ?>"/>
+            <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+            <style amp-custom>*{margin:0;padding:0}html,body{height:100%}body{background:#fff;color:#666;font-size:14px;font-family:"-apple-system","Open Sans","HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,sans-serif}::selection,::-moz-selection,::-webkit-selection{background-color:#2479cc;color:#eee}h1{font-size:1.5em}h3{font-size:1.3em}h4{font-size:1.1em}a{color:#2479cc;text-decoration:none}header{background-color:#fff;box-shadow:0 0 40px 0 rgba(0,0,0,0.1);box-sizing:border-box;font-size:14px;height:60px;padding:0 15px;position:absolute;width:100%}header a{color:#333}header h1{font-size:30px;font-weight:400;line-height:30px;margin:15px 0}footer{font-size:.9em;text-align:center;width:auto}.content{padding-top:60px}article{position:relative;padding:30px;border-top:1px solid #fff;border-bottom:1px solid #ddd}.pageinfo{font-size:15px;padding:5px;margin:5px;text-align:center}.info{background-color:#f5d09a;border:1px solid #e2e2e2;border-left:5px solid #fff000;color:#333;font-size:15px;padding:5px 10px;margin:10px 0}.nav{text-align:center;margin-bottom:-25px}.nav button{width:150px;height:25px;margin:auto;margin-bottom:20px;border-width:0;border-radius:3px;background:#1e90ff;cursor:pointer;outline:0;color:white;font-size:16px}button:hover{background:#59f}article a{font-size:2em}article p{position:relative;line-height:2em;font-size:16px;text-indent:2em;padding-top:15px}</style>
             <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
             <noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
         </head>
         <body>
-        <div class="header">
+        <header>
             <div class="header-title"><h1><a href="<?php Helper::options()->siteUrl(); ?>"><?php print($this->publisher);?></a></h1></div>
-
-        </div>
-        <hr>
-        <div class="article-list">
-
+        </header>
+        <div></div>
+        <div class="content">
             <amp-list width="auto"
-                      height="100"
+                      height="650"
                       layout="fixed-height"
-                      src="<?php echo Typecho_Common::url("amp/list/0", $this->siteurl);
-                      //Helper::options()->index ?>"
-                      class="m1">
-                <template type="amp-mustache"
-                          id="amp-template-id">
-                    <div class="articel">
-                        <a href="{{url}}">{{title}}</a><div class="article_content">{{content}}</div>
-                    <hr>
-                    </div>
+                      src="<?php echo Typecho_Common::url("amp/list/1", $this->baseurl);?>"
+                      [src]="'<?php echo Typecho_Common::url("amp/list/", $this->baseurl);?>' + pageNumber"
+                      single-item>
+                
+                <template type="amp-mustache">
+                    {{#article}}
+                    <article>
+                        <a href="{{url}}">{{title}}</a>
+                        <div class="article_content"><p>{{content}}</p></div>
+                    </article>
+                    {{/article}}
+                    <p class="pageinfo">Page {{currentPage}} of {{pageCount}} </p>
                 </template>
             </amp-list>
+        </div>
+        <footer>
+        <div class="nav">
+            <button class="prev"
+                    hidden
+                    [hidden]="pageNumber < 2"
+                    on="tap:
+    AMP.setState({
+      pageNumber: pageNumber - 1
+    })">Previous</button>
+            <button class="next"
+                    [hidden]="page ? pageNumber >= page.items.pageCount : false"
+                    on="tap:
+    AMP.setState({
+      pageNumber: pageNumber ? pageNumber + 1 : 2
+    })">Next</button>
+        </div>
 
-
-            </div>
+        <amp-state id="page"
+                   src="<?php echo Typecho_Common::url("amp/list/1", $this->baseurl);?>"
+                   [src]="'<?php echo Typecho_Common::url("amp/list/", $this->baseurl);?>' + pageNumber"></amp-state>
+            <div><p class="info">当前页面是本站的「<a href="//www.ampproject.org/zh_cn/">Google AMP</a>」版。查看和发表评论请点击：<a
+                    href="<?php print($this->baseurl); ?>">完整版 »</a></p></div>
+        </footer>
         </body>
         </html>
         <?php
@@ -243,13 +295,13 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         "description": "<?php print(mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "..."); ?>"
       }
                 </script>
-                <style amp-custom>*{margin:0;padding:0}html,body{height:100%}body{background:#fff;color:#666;font-size:14px;font-family:"-apple-system","Open Sans","HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,sans-serif}::selection,::-moz-selection,::-webkit-selection{background-color:#2479CC;color:#eee}h1{font-size:1.5em}h3{font-size:1.3em}h4{font-size:1.1em}a{color:#2479CC;text-decoration:none}article{padding:85px 15px 0}article .entry-content{color:#444;font-size:16px;font-family:Arial,'Hiragino Sans GB',冬青黑,'Microsoft YaHei',微软雅黑,SimSun,宋体,Helvetica,Tahoma,'Arial sans-serif';-webkit-font-smoothing:antialiased;line-height:1.8;word-wrap:break-word}article h1.title{color:#333;font-size:2em;font-weight:300;line-height:35px;margin-bottom:25px}article .entry-content p{margin-top:15px}article h1.title a{color:#333;transition:color .3s}article h1.title a:hover{color:#2479CC}article blockquote{background-color:#f8f8f8;border-left:5px solid #2479CC;margin-top:10px;overflow:hidden;padding:15px 20px}article code{background-color:#eee;border-radius:5px;font-family:Consolas,Monaco,'Andale Mono',monospace;font-size:80%;margin:0 2px;padding:4px 5px;vertical-align:middle}article pre{background-color:#f8f8f8;border-left:5px solid #ccc;color:#5d6a6a;font-size:14px;line-height:1.6;overflow:hidden;padding:0.6em;position:relative;white-space:pre-wrap;word-break:break-word;word-wrap:break-word}article table{border:0;border-collapse:collapse;border-spacing:0}article pre code{background-color:transparent;border-radius:0 0 0 0;border:0;display:block;font-size:100%;margin:0;padding:0;position:relative}article table th,article table td{border:0}article table th{border-bottom:2px solid #848484;padding:6px 20px;text-align:left}article table td{border-bottom:1px solid #d0d0d0;padding:6px 20px}article .copyright-info,article .amp-info{font-size:14px}article .expire-tips{background-color:#f5d09a;border:1px solid #e2e2e2;border-left:5px solid #fff000;color:#333;font-size:15px;padding:5px 10px;margin:20px 0px}article .post-info,article .entry-content .date{font-size:14px}article .entry-content blockquote,article .entry-content ul,article .entry-content ol,article .entry-content dl,article .entry-content table,article .entry-content h1,article .entry-content h2,article .entry-content h3,article .entry-content h4,article .entry-content h5,article .entry-content h6,article .entry-content pre{margin-top:15px}article pre b.name{color:#eee;font-family:"Consolas","Liberation Mono",Courier,monospace;font-size:60px;line-height:1;pointer-events:none;position:absolute;right:10px;top:10px}article .entry-content .date{color:#999}article .entry-content ul ul,article .entry-content ul ol,article .entry-content ul dl,article .entry-content ol ul,article .entry-content ol ol,article .entry-content ol dl,article .entry-content dl ul,article .entry-content dl ol,article .entry-content dl dl,article .entry-content blockquote > p:first-of-type{margin-top:0}article .entry-content ul,article .entry-content ol,article .entry-content dl{margin-left:25px}.header{background-color:#fff;box-shadow:0 0 40px 0 rgba(0,0,0,0.1);box-sizing:border-box;font-size:14px;height:60px;padding:0 15px;position:absolute;width:100%}.footer{font-size:.9em;padding:15px 0 25px;text-align:center;width:auto}.header h1{font-size:30px;font-weight:400;line-height:30px;margin:15px 0px}.menu-list li a,.menu-list li span{border-bottom:solid 1px #ededed;color:#000;display:block;font-size:18px;height:60px;line-height:60px;text-align:center;width:86px}.header h1 a{color:#333}.tex .hljs-formula{background:#eee8d5}</style>
+                <style amp-custom>*{margin:0;padding:0}html,body{height:100%}body{background:#fff;color:#666;font-size:14px;font-family:"-apple-system","Open Sans","HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,sans-serif}::selection,::-moz-selection,::-webkit-selection{background-color:#2479CC;color:#eee}h1{font-size:1.5em}h3{font-size:1.3em}h4{font-size:1.1em}a{color:#2479CC;text-decoration:none}article{padding:85px 15px 0}article .entry-content{color:#444;font-size:16px;font-family:Arial,'Hiragino Sans GB',冬青黑,'Microsoft YaHei',微软雅黑,SimSun,宋体,Helvetica,Tahoma,'Arial sans-serif';-webkit-font-smoothing:antialiased;line-height:1.8;word-wrap:break-word}article h1.title{color:#333;font-size:2em;font-weight:300;line-height:35px;margin-bottom:25px}article .entry-content p{margin-top:15px;text-indent: 2em;}article h1.title a{color:#333;transition:color .3s}article h1.title a:hover{color:#2479CC}article blockquote{background-color:#f8f8f8;border-left:5px solid #2479CC;margin-top:10px;overflow:hidden;padding:15px 20px}article code{background-color:#eee;border-radius:5px;font-family:Consolas,Monaco,'Andale Mono',monospace;font-size:80%;margin:0 2px;padding:4px 5px;vertical-align:middle}article pre{background-color:#f8f8f8;border-left:5px solid #ccc;color:#5d6a6a;font-size:14px;line-height:1.6;overflow:hidden;padding:0.6em;position:relative;white-space:pre-wrap;word-break:break-word;word-wrap:break-word}article table{border:0;border-collapse:collapse;border-spacing:0}article pre code{background-color:transparent;border-radius:0 0 0 0;border:0;display:block;font-size:100%;margin:0;padding:0;position:relative}article table th,article table td{border:0}article table th{border-bottom:2px solid #848484;padding:6px 20px;text-align:left}article table td{border-bottom:1px solid #d0d0d0;padding:6px 20px}article .copyright-info,article .amp-info{font-size:14px}article .expire-tips{background-color:#f5d09a;border:1px solid #e2e2e2;border-left:5px solid #fff000;color:#333;font-size:15px;padding:5px 10px;margin:20px 0px}article .post-info,article .entry-content .date{font-size:14px}article .entry-content blockquote,article .entry-content ul,article .entry-content ol,article .entry-content dl,article .entry-content table,article .entry-content h1,article .entry-content h2,article .entry-content h3,article .entry-content h4,article .entry-content h5,article .entry-content h6,article .entry-content pre{margin-top:15px}article pre b.name{color:#eee;font-family:"Consolas","Liberation Mono",Courier,monospace;font-size:60px;line-height:1;pointer-events:none;position:absolute;right:10px;top:10px}article .entry-content .date{color:#999}article .entry-content ul ul,article .entry-content ul ol,article .entry-content ul dl,article .entry-content ol ul,article .entry-content ol ol,article .entry-content ol dl,article .entry-content dl ul,article .entry-content dl ol,article .entry-content dl dl,article .entry-content blockquote > p:first-of-type{margin-top:0}article .entry-content ul,article .entry-content ol,article .entry-content dl{margin-left:25px}.header{background-color:#fff;box-shadow:0 0 40px 0 rgba(0,0,0,0.1);box-sizing:border-box;font-size:14px;height:60px;padding:0 15px;position:absolute;width:100%}.footer{font-size:.9em;padding:15px 0 25px;text-align:center;width:auto}.header h1{font-size:30px;font-weight:400;line-height:30px;margin:15px 0px}.menu-list li a,.menu-list li span{border-bottom:solid 1px #ededed;color:#000;display:block;font-size:18px;height:60px;line-height:60px;text-align:center;width:86px}.header h1 a{color:#333}.tex .hljs-formula{background:#eee8d5}</style>
                 <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
                 <noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
             </head>
             <body>
             <header class="header">
-                <div class="header-title"><h1><a href="<?php Helper::options()->siteUrl(); ?>"><?php print($this->publisher);?></a></h1></div>
+                <div class="header-title"><h1><a href="<?php print(Typecho_Common::url("ampindex/", $this->baseurl)); ?>"><?php print($this->publisher);?></a></h1></div>
             </header>
 
             <article class="post"><h1 class="title"><?php print($this->article['title']); ?></h1>
@@ -361,33 +413,26 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 		);
 		return $html;
 	}
-    
-    private function MakeArticle($maptype='amp'){
+	
+	private function MakeArticleList($linkType='amp',$page=0,$pageSize=0){
         $db = Typecho_Db::get();
-        $articles = $db->fetchAll($db->select()->from('table.contents')
+        $sql=$db->select()->from('table.contents')
             ->where('table.contents.status = ?', 'publish')
             ->where('table.contents.type = ?', 'post')
-            ->order('table.contents.created', Typecho_Db::SORT_DESC));
+            ->order('table.contents.created', Typecho_Db::SORT_DESC);
+        if($page>0 and $pageSize>0){
+            $countSql = clone $sql;
+            $this->_total = Typecho_Widget::widget('Widget_Abstract_Contents')->size($countSql);
+            $sql=$sql->page($page,$pageSize);
+        }
+        $articles = $db->fetchAll($sql);
         
-        //changefreq -> always、hourly、daily、weekly、monthly、yearly、never
-        //priority -> 0.0优先级最低、1.0最高
-        $root_url=Helper::options()->rootUrl;
-        header("Content-Type: application/xml");
-        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        echo "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
-        
-        echo "\t<url>\n";
-        echo "\t\t<loc>{$root_url}</loc>\n";
-        echo "\t\t<lastmod>" . date('Y-m-d') . "</lastmod>\n";
-        echo "\t\t<changefreq>daily</changefreq>\n";
-        echo "\t\t<priority>1</priority>\n";
-        echo "\t</url>\n";
-    
         $router=explode('/',Helper::options()->routingTable['post']['url']);
         $slugtemp=$router[count($router)-1];
         if(empty($slugtemp)){
             $slugtemp=$router[count($router)-2];
         }
+        $articleList=array();
         foreach ($articles AS $article) {
             $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
                 ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
@@ -400,17 +445,34 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             $article['year'] = $article['date']->year;
             $article['month'] = $article['date']->month;
             $article['day'] = $article['date']->day;
-//            $article['permalink'] = Typecho_Common::url($article['pathinfo'], Helper::options()->index);
-            
-            
+    
             $slug = str_replace('[slug]',$article['slug'],$slugtemp);
             $slug = str_replace('[cid:digital]',$article['cid'],$slug);
-            
-            if($maptype=='mip'){
+            if($linkType=='mip'){
                 $article['permalink'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
             }else{
                 $article['permalink'] = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
             }
+            $articleList[]=$article;
+        }
+        return $articleList;
+    }
+    
+    private function MakeSiteMap($maptype='amp'){
+        //changefreq -> always、hourly、daily、weekly、monthly、yearly、never
+        //priority -> 0.0优先级最低、1.0最高
+        $root_url=Helper::options()->rootUrl;
+        header("Content-Type: application/xml");
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        echo "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n";
+        echo "\t<url>\n";
+        echo "\t\t<loc>{$root_url}</loc>\n";
+        echo "\t\t<lastmod>" . date('Y-m-d') . "</lastmod>\n";
+        echo "\t\t<changefreq>daily</changefreq>\n";
+        echo "\t\t<priority>1</priority>\n";
+        echo "\t</url>\n";
+        $articles=$this->MakeArticleList($maptype);
+        foreach ($articles AS $article) {
             echo "\t<url>\n";
             echo "\t\t<loc>" . $article['permalink'] . "</loc>\n";
             echo "\t\t<lastmod>" . date('Y-m-d', $article['modified']) . "</lastmod>\n";
@@ -422,7 +484,16 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         
     }
     
-
+    
+    private function substr_format($text, $length, $replace='...', $encoding='UTF-8')
+    {
+        if ($text && mb_strlen($text, $encoding)>$length)
+        {
+            return mb_substr($text, 0, $length, $encoding).$replace;
+        }
+        return $text;
+    }
+    
 }
 
 ?>

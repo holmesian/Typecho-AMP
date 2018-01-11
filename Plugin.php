@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.3.6
+ * @version 0.4.0
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -52,6 +52,9 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         $form->addInput($element);
 
         $element = new Typecho_Widget_Helper_Form_Element_Radio('mipSiteMap', array(0 => '不开启', 1 => '开启'), 1, _t('是否开启MIP的SiteMap'),'mipSiteMap地址：'.Helper::options()->index.'/mip_sitemap.xml');
+        $form->addInput($element);
+
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('ampIndex', array(0 => '不开启', 1 => '开启'), 1, _t('是否开启AMP版的首页'),'ampIndex地址：'.Helper::options()->index.'/ampindex   <<受到amp-list控件限制，<b>非HTTPS站点</b>请勿开启AMP版的首页。');
         $form->addInput($element);
    
     }
