@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.4.0
+ * @version 0.4.1
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -45,7 +45,13 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	    $element = new Typecho_Widget_Helper_Form_Element_Text('LOGO', null, 'https://holmesian.org/usr/themes/Holmesian/images/holmesian.png' , _t('默认LOGO地址'), '根据AMP的限制，尺寸最大不超过60*60');
 	    $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Text('baiduAPI', null, '' , _t('接口调用地址'), '请到http://ziyuan.baidu.com/mip/index获取接口调用地址。');
+        $element = new Typecho_Widget_Helper_Form_Element_Text('baiduAPI', null, '' , _t('MIP/AMP推送接口调用地址'), '请到http://ziyuan.baidu.com/mip/index获取接口调用地址。');
+        $form->addInput($element);
+
+        $element = new Typecho_Widget_Helper_Form_Element_Text('baiduAPPID', null, '' , _t('熊掌号识别ID'), '请到https://ziyuan.baidu.com/xzh/commit/method获取appid。');
+        $form->addInput($element);
+
+        $element = new Typecho_Widget_Helper_Form_Element_Text('baiduTOKEN', null, '' , _t('熊掌号准入密钥'), '请到https://ziyuan.baidu.com/xzh/commit/method获取token。');
         $form->addInput($element);
 
         $element = new Typecho_Widget_Helper_Form_Element_Radio('ampSiteMap', array(0 => '不开启', 1 => '开启'), 1, _t('是否开启AMP的SiteMap'),'ampSiteMap地址：'.Helper::options()->index.'/amp_sitemap.xml');

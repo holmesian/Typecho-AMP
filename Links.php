@@ -10,10 +10,9 @@ if (isset($_GET['send'])) {
         throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持 php-curl 扩展而且没有打开 allow_url_fopen 功能, 无法正常使用此功能'));
     }
     $db = Typecho_Db::get();
-//    $options = Helper::options();
-    $api = Helper::options()->plugin('AMP')->baiduAPI;
 
-    if (isset($_GET['page'])) {//URL分页
+    //URL分页
+    if (isset($_GET['page'])) {
         $page = (int)($_GET['page']);
     } else {
         $page = 1;
@@ -21,38 +20,33 @@ if (isset($_GET['send'])) {
     //URL类型
     if ((isset($_GET['type']) and $_GET['type'] == 'amp') OR (isset($_POST['type']) and $_POST['type'] == 'amp')) {
         $sendtype = 'amp';
-    } else {
+        $type='amp';
+    } elseif((isset($_GET['type']) and $_GET['type'] == 'mip') OR (isset($_POST['type']) and $_POST['type'] == 'mip')) {
         $sendtype = 'mip';
+        $type='mip';
     }
-    $api = preg_replace("/&type=[a-z]+/", "&type={$sendtype}", $api);//替换接口中的类型
+    elseif((isset($_GET['type']) and $_GET['type'] == 'batch') OR (isset($_POST['type']) and $_POST['type'] == 'batch')) {
+        $sendtype = 'mip';
+        $type = 'batch';
+        $appid=Helper::options()->plugin('AMP')->baiduAPPID;
+        $token=Helper::options()->plugin('AMP')->baiduTOKEN;
+        $api= "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=batch";
+    }else{
+        $sendtype = 'mip';
+        $type = 'mip';
+    }
 
+    $articles=Typecho_Widget::widget('AMP_Action')->MakeArticleList($sendtype,$page,20);
 
-    $articles = $db->fetchAll($db->select()->from('table.contents')
-        ->where('table.contents.status = ?', 'publish')
-        ->where('table.contents.type = ?', 'post')
-        ->page($page, 20)
-        ->order('table.contents.created', Typecho_Db::SORT_DESC));
+    //接口类型
+    if(empty($api)){
+        $api = Helper::options()->plugin('AMP')->baiduAPI;
+        $api = preg_replace("/&type=[a-z]+/", "&type={$sendtype}", $api);//替换接口中的类型
+    }
 
     $urls = array();
-    
-    $router=explode('/',Helper::options()->routingTable['post']['url']);
-    $slugtemp=$router[count($router)-1];
-    if(empty($slugtemp)){
-        $slugtemp=$router[count($router)-2];
-    }
-    
     foreach ($articles AS $article) {
-//        $type = $article['type'];
-//        $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
-//            ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
-//            ->where('table.relationships.cid = ?', $article['cid'])
-//            ->where('table.metas.type = ?', 'category')
-//            ->order('table.metas.order', Typecho_Db::SORT_ASC));
-    
-        $slug = str_replace('[slug]',$article['slug'],$slugtemp);
-        $slug = str_replace('[cid:digital]',$article['cid'],$slug);
-        $article['permalink'] = Typecho_Common::url("{$sendtype}/{$slug}", Helper::options()->index);
-        echo '正在提交:' . $article['permalink'] . '  <br>';
+        echo '正在提交:' . $article['permalink'] . " <br>";
         $urls[] = $article['permalink'];
     }
 
@@ -70,12 +64,7 @@ if (isset($_GET['send'])) {
 //        'https://holmesian.org/mip/KCP-accelerate-SS',
 //        'https://holmesian.org/mip/father-io',
 //        'https://holmesian.org/mip/Thinkpad-X250-Disassembly-SSD',
-//        'https://holmesian.org/mip/come-to-typecho',
-//        'https://holmesian.org/mip/nginx-certificate-transparency',
-//        'https://holmesian.org/mip/linode-vps-centos-anyconnect',
-//        'https://holmesian.org/mip/weixin-browser-cache-disable',
-//        'https://holmesian.org/mip/build-nethunter-android-kernel-for-gsm-sniffing',
-//        'https://holmesian.org/mip/happy-new-year-2015',);
+//        'https://holmesian.org/mip/come-to-typecho',);
 
     if (count($urls) > 0) {
 
@@ -93,29 +82,30 @@ if (isset($_GET['send'])) {
 //    string '{"remain":4999960,"success":0,"not_valid":[""]}'
 //    string '{"success_mip":20,"remain_mip":9980}' (length=36)
 //    $result='{"success_amp":20,"remain_amp":9980}';
+//string(43) "{"success_batch":20,"remain_batch":4999960}"
 
         $obj = json_decode($result, true);
-        $name = "success_{$sendtype}";
+        $name = "success_{$type}";
 
         if (isset($obj[$name])) {
 
             echo '<hr>';
             echo "第{$page}页提交成功,";
-            $count = $obj["remain_{$sendtype}"];
-            echo "还可提交{$count}条URL,准备提交下一页";
+            $count = $obj["remain_{$type}"];
+            echo "还可提交{$count}条URL,准备提交下一页>>>";
             $page += 1;
 
             ?>
             <script language="JavaScript">
-                window.setTimeout("location='<?php $options->adminUrl('extending.php?panel=AMP/Links.php' . "&send=1&type={$sendtype}&page={$page}");
+                window.setTimeout("location='<?php $options->adminUrl('extending.php?panel=AMP/Links.php' . "&send=1&type={$type}&page={$page}");
                     ?>'", 2000);
             </script>
             未自动跳转请点击<a
-                href="<?php $options->adminUrl('extending.php?panel=AMP/Links.php' . "&send=1&type={$sendtype}&page={$page}"); ?>">这里</a>
+                href="<?php $options->adminUrl('extending.php?panel=AMP/Links.php' . "&send=1&type={$type}&page={$page}"); ?>">这里</a>
             <?php
 
         } else {
-            echo "提交失败";
+            echo "提交失败 -<";
             echo "还可提交{$obj['remain']}条URL";
         }
     } else {
@@ -136,20 +126,24 @@ if (isset($_GET['send'])) {
             <?php include 'page-title.php'; ?>
             <div class="row typecho-page-main" role="main">
                 <form action="<?php $options->adminUrl('extending.php?panel=AMP/Links.php&send=1'); ?>" method="POST">
-                    <div class="operate">
-                        <select name="type">
+                    <div class="operate" style="text-align: center;">
+                        <select name="type" style="width:200px;text-align-last: center;">
                             <option value="amp">AMP</option>
                             <option value="mip">MIP</option>
+                            <option value="batch">熊掌号</option>
                         </select>
-                        <button type="submit" class="btn btn-s"><?php _e('提交到百度'); ?></button>
+                        <button type="submit" class="btn btn-s"><?php _e('开始提交'); ?></button>
                     </div>
                 </form>
+                <div>
+                    <p>1.AMP（Accelerated Mobile Pages），是谷歌的一项开放源代码计划，可在移动设备上快速加载的轻便型网页，旨在使网页在移动设备上快速加载并且看起来非常美观。选择该项为自动向百度提交AMP页面地址。</p>
+                    <p>2.MIP(Mobile Instant Page - 移动网页加速器)，是一套应用于移动网页的开放性技术标准。通过提供MIP-HTML规范、MIP-JS运行环境以及MIP-Cache页面缓存系统，实现移动网页加速。选择该项为自动向百度提交页面地址。</p>
+                    <p>3.熊掌号，是百度熊掌号是内容和服务提供者入驻百度生态的实名账号。通过历史内容接口，每天可提交最多500万条有价值的内容，所提交内容会进入百度搜索统一处理流程。请先设置好APPID和TOKEN后再进行提交。</p>
+                </div>
 
             </div><!-- end .typecho-page-main -->
         </div>
     </div>
-
-
     <?php
 }
 include 'copyright.php';

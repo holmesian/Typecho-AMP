@@ -92,33 +92,27 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 <link rel="stylesheet" type="text/css" href="https://mipcache.bdstatic.com/static/v1/mip.css">
                 <link rel="canonical" href="<?php print($this->article['permalink']); ?>">
                 <title><?php print($this->article['title']); ?></title>
-                <style mip-custom>
-                    body{margin:10px;}
-                    .middle-text { text-align: center;}
-                    .expire-tips {
-                        background-color: #f5d09a;
-                        border: 1px solid #e2e2e2;
-                        border-left: 5px solid #fff000;
-                        color: #333;
-                        font-size: 15px;
-                        padding: 5px 10px;
-                        margin: 20px 0px
+                <script src="https://mipcache.bdstatic.com/extensions/platform/v1/mip-cambrian/mip-cambrian.js"></script>
+                <style mip-custom>body{margin:10px}.middle-text{text-align:center}.expire-tips{background-color:#f5d09a;border:1px solid #e2e2e2;border-left:5px solid #fff000;color:#333;font-size:15px;padding:5px 10px;margin:20px 0}.entry-content{color:#444;font-size:16px;font-family:Arial,'Hiragino Sans GB',冬青黑,'Microsoft YaHei',微软雅黑,SimSun,宋体,Helvetica,Tahoma,'Arial sans-serif';-webkit-font-smoothing:antialiased;line-height:1.8;word-wrap:break-word}.entry-content p{text-indent:2em;margin-top:12px}</style>
+                <script type="application/ld+json">
+                    {
+                        "@context": "https://ziyuan.baidu.com/contexts/cambrian.jsonld",
+                        "@id": "<?php print($this->article['mipurl']);?>",
+                        "appid": "<?php print(Helper::options()->plugin('AMP')->baiduAPPID);?>",
+                        "title": "<?php print($this->article['title']); ?>",
+                        "images": [
+                            "<?php print($this->Get_post_img()); ?>"
+                            ],
+                        "description": "<?php print(mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "..."); ?>",
+                        "pubDate": "<?php print($this->article['date']->format('Y-m-d\TH:i:s')); ?>",
+                        "upDate": "<?php print($this->article['date']->format('Y-m-d\TH:i:s')); ?>",
+                        "lrDate": "<?php print($this->article['date']->format('Y-m-d\TH:i:s')); ?>",
+                        "isOrignal":1
                     }
-                    .entry-content {
-                        color: #444;
-                        font-size: 16px;
-                        font-family: Arial, 'Hiragino Sans GB', 冬青黑, 'Microsoft YaHei', 微软雅黑, SimSun, 宋体, Helvetica, Tahoma, 'Arial sans-serif';
-                        -webkit-font-smoothing: antialiased;
-                        line-height: 1.8;
-                        word-wrap: break-word
-                    }
-                    .entry-content p {
-                        text-indent:2em;
-                        margin-top: 12px
-                    }
-                </style>
+               </script>
             </head>
             <body>
+            <mip-cambrian site-id="<?php print(Helper::options()->plugin('AMP')->baiduAPPID);?>"></mip-cambrian>
             <header class="header">
                 <div class="header-title"><h1><a href="/"><?php print($this->publisher);?></a></h1></div>
             </header>
@@ -318,8 +312,6 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         } else {
             die('Delete');
         }
-
-
     }
 
     public function getArticle()
@@ -342,13 +334,67 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 ->where('uid = ?', $article['authorId']);
             $author = $this->db->fetchRow($select);
             $article['author'] = $author['screenName'];
-            $article['text'] = Typecho_Widget::widget("Widget_Abstract_Contents")->markdown($article['text']);
+            $article['text'] = Markdown::convert($article['text']);
+
+            $router=explode('/',Helper::options()->routingTable['post']['url']);
+            $slugtemp=$router[count($router)-1];
+            if(empty($slugtemp)){
+                $slugtemp=$router[count($router)-2];
+            }
+            $slug = str_replace('[slug]',$article['slug'],$slugtemp);
+            $slug = str_replace('[cid:digital]',$article['cid'],$slug);
+            $article['mipurl'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);;
         } else {
             $article = array('isMarkdown' => false);
         }
         return $article;
-
     }
+
+
+    public function MakeArticleList($linkType='amp',$page=0,$pageSize=0){
+        $db = Typecho_Db::get();
+        $sql=$db->select()->from('table.contents')
+            ->where('table.contents.status = ?', 'publish')
+            ->where('table.contents.type = ?', 'post')
+            ->order('table.contents.created', Typecho_Db::SORT_DESC);
+        if($page>0 and $pageSize>0){
+            $countSql = clone $sql;
+            $this->_total = Typecho_Widget::widget('Widget_Abstract_Contents')->size($countSql);
+            $sql=$sql->page($page,$pageSize);
+        }
+        $articles = $db->fetchAll($sql);
+
+        $router=explode('/',Helper::options()->routingTable['post']['url']);
+        $slugtemp=$router[count($router)-1];
+        if(empty($slugtemp)){
+            $slugtemp=$router[count($router)-2];
+        }
+        $articleList=array();
+        foreach ($articles AS $article) {
+            $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
+                ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
+                ->where('table.relationships.cid = ?', $article['cid'])
+                ->where('table.metas.type = ?', 'category')
+                ->order('table.metas.order', Typecho_Db::SORT_ASC));
+            $article['category'] = urlencode(current(Typecho_Common::arrayFlatten($article['categories'], 'slug')));
+            $article['slug'] = urlencode($article['slug']);
+            $article['date'] = new Typecho_Date($article['created']);
+            $article['year'] = $article['date']->year;
+            $article['month'] = $article['date']->month;
+            $article['day'] = $article['date']->day;
+
+            $slug = str_replace('[slug]',$article['slug'],$slugtemp);
+            $slug = str_replace('[cid:digital]',$article['cid'],$slug);
+            if($linkType=='mip'){
+                $article['permalink'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
+            }else{
+                $article['permalink'] = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
+            }
+            $articleList[]=$article;
+        }
+        return $articleList;
+    }
+
 
     private function Get_post_img()
     {
@@ -413,51 +459,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 		);
 		return $html;
 	}
-	
-	private function MakeArticleList($linkType='amp',$page=0,$pageSize=0){
-        $db = Typecho_Db::get();
-        $sql=$db->select()->from('table.contents')
-            ->where('table.contents.status = ?', 'publish')
-            ->where('table.contents.type = ?', 'post')
-            ->order('table.contents.created', Typecho_Db::SORT_DESC);
-        if($page>0 and $pageSize>0){
-            $countSql = clone $sql;
-            $this->_total = Typecho_Widget::widget('Widget_Abstract_Contents')->size($countSql);
-            $sql=$sql->page($page,$pageSize);
-        }
-        $articles = $db->fetchAll($sql);
-        
-        $router=explode('/',Helper::options()->routingTable['post']['url']);
-        $slugtemp=$router[count($router)-1];
-        if(empty($slugtemp)){
-            $slugtemp=$router[count($router)-2];
-        }
-        $articleList=array();
-        foreach ($articles AS $article) {
-            $article['categories'] = $db->fetchAll($db->select()->from('table.metas')
-                ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
-                ->where('table.relationships.cid = ?', $article['cid'])
-                ->where('table.metas.type = ?', 'category')
-                ->order('table.metas.order', Typecho_Db::SORT_ASC));
-            $article['category'] = urlencode(current(Typecho_Common::arrayFlatten($article['categories'], 'slug')));
-            $article['slug'] = urlencode($article['slug']);
-            $article['date'] = new Typecho_Date($article['created']);
-            $article['year'] = $article['date']->year;
-            $article['month'] = $article['date']->month;
-            $article['day'] = $article['date']->day;
-    
-            $slug = str_replace('[slug]',$article['slug'],$slugtemp);
-            $slug = str_replace('[cid:digital]',$article['cid'],$slug);
-            if($linkType=='mip'){
-                $article['permalink'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
-            }else{
-                $article['permalink'] = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
-            }
-            $articleList[]=$article;
-        }
-        return $articleList;
-    }
-    
+
     private function MakeSiteMap($maptype='amp'){
         //changefreq -> always、hourly、daily、weekly、monthly、yearly、never
         //priority -> 0.0优先级最低、1.0最高
