@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.4.1
+ * @version 0.4.2
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -14,7 +14,11 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 
     public static function activate()
     {
-	    Typecho_Plugin::factory('Widget_Archive')->header = array('AMP_Action','headlink');
+        //挂载发布文章接口
+        Typecho_Plugin::factory('Widget_Contents_Post_Edit')->finishPublish = array('AMP_Action', 'sendRealtime');
+
+        Typecho_Plugin::factory('Widget_Archive')->header = array('AMP_Action','headlink');
+
         Helper::addRoute('amp_index', '/ampindex/', 'AMP_Action', 'AMPindex');
 	    Helper::addRoute('amp_map', '/amp/[slug]', 'AMP_Action', 'AMPpage');
 	    Helper::addRoute('amp_list', '/amp/list/[list_id]', 'AMP_Action', 'AMPlist');
@@ -61,6 +65,9 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         $form->addInput($element);
 
         $element = new Typecho_Widget_Helper_Form_Element_Radio('ampIndex', array(0 => '不开启', 1 => '开启'), 1, _t('是否开启AMP版的首页'),'ampIndex地址：'.Helper::options()->index.'/ampindex   <<受到amp-list控件限制，<b>非HTTPS站点</b>请勿开启AMP版的首页。');
+        $form->addInput($element);
+
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('mipAutoSubmit', array(0 => '不开启', 1 => '开启'), 0, _t('是否开启新文章自动提交到熊掌号'),'请填写熊掌号的APPID和TOKEN后再开启。');
         $form->addInput($element);
    
     }

@@ -80,7 +80,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function MIPpage()
     {
-        $this->article = $this->getArticle();
+        $this->article = $this->getArticle($this->request->slug);
 
         if ($this->article['isMarkdown']) {
             ?>
@@ -246,7 +246,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function AMPpage()
     {
-        $this->article = $this->getArticle();
+        $this->article = $this->getArticle($this->request->slug);
 
         if ($this->article['isMarkdown']) {
             ?>
@@ -314,17 +314,84 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
     }
 
-    public function getArticle()
-    {
-        $slug=explode('.',$this->request->slug)[0];
-        if(preg_match("/^\d*$/",$slug)) {
-            $select = $this->db->select()->from('table.contents')
-                ->where('cid = ?', $slug);
-        }else{
-            $select = $this->db->select()->from('table.contents')
-                ->where('slug = ?', $slug);
+    public function sendRealtime($contents, $class){
+        //如果文章属性为隐藏或滞后发布
+        if ('publish' != $contents['visibility'] || $contents['created'] > time()) {
+            return;
         }
 
+        //如果没有开启自动提交功能
+        if (Helper::options()->plugin('AMP')->mipAutoSubmit == 0) {
+            return;
+        }
+
+        //获取系统配置
+        $options = Helper::options();
+
+        //判断是否配置相关信息
+        if (is_null($options->plugin('AMP')->baiduAPPID) or is_null($options->plugin('AMP')->baiduTOKEN) ) {
+            throw new Typecho_Plugin_Exception(_t('参数未正确配置'));
+        }
+        $appid=$options->plugin('AMP')->baiduAPPID;
+        $token=$options->plugin('AMP')->baiduTOKEN;
+        $api= "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=batch";
+
+        $article=Typecho_Widget::widget('AMP_Action')->getArticleByCid($class->cid);
+
+
+
+        $urls=array($article['mipurl'],);
+
+        try {
+            //为了保证成功调用，先做判断
+            if (false == Typecho_Http_Client::get()) {
+                throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持 php-curl 扩展而且没有打开 allow_url_fopen 功能, 无法正常使用此功能'));
+            }
+
+            //发送请求
+            $http = Typecho_Http_Client::get();
+            $http->setData(implode("\n", $urls));
+            $http->setHeader('Content-Type', 'text/plain');
+            $json = $http->send($api);
+            $return = json_decode($json, 1);
+
+
+        } catch (Typecho_Exception $e) {
+            throw new Typecho_Plugin_Exception(_t('出现错误:'.$e->getMessage()));
+        }
+
+
+    }
+
+    public function getArticle($slug)
+    {
+        $tempslug=explode('.',$slug)[0];
+        if(preg_match("/^\d*$/",$tempslug)) {
+            $cid=$tempslug;
+            $article=$this->getArticleByCid($cid);
+        }else{
+            $slug=$tempslug;
+            $article=$this->getArticleBySlug($slug);
+        }
+        return $article;
+
+    }
+
+    private function getArticleBySlug($slug){
+        $select = $this->db->select()->from('table.contents')
+            ->where('slug = ?', $slug);
+        $article = $this->ArticleBase($select);
+        return $article;
+    }
+
+    private function getArticleByCid($cid){
+        $select = $this->db->select()->from('table.contents')
+            ->where('cid = ?', $cid);
+        $article = $this->ArticleBase($select);
+        return $article;
+    }
+
+    private function ArticleBase($select){
         $article_src = $this->db->fetchRow($select);
 
         if (count($article_src) > 0) {
