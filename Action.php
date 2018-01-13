@@ -105,8 +105,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                             ],
                         "description": "<?php print(mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "..."); ?>",
                         "pubDate": "<?php print($this->article['date']->format('Y-m-d\TH:i:s')); ?>",
-                        "upDate": "<?php print($this->article['date']->format('Y-m-d\TH:i:s')); ?>",
-                        "lrDate": "<?php print($this->article['date']->format('Y-m-d\TH:i:s')); ?>",
+                        "upDate": "<?php print(date('Y-m-d\TH:i:s',$this->article['modified'])); ?>",
+                        "lrDate": "<?php print(date('Y-m-d\TH:i:s',$this->article['modified'])); ?>",
                         "isOrignal":1
                     }
                </script>
@@ -144,7 +144,6 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         $currentPage=$this->request->list_id;
         $articles=$this->MakeArticleList('amp',$currentPage,5);
-//        var_dump();
         $article_data=array(
             'pageCount'=>ceil($this->_total/5),
             'currentPage'=>$currentPage,
@@ -269,7 +268,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
           "name": "<?php print($this->article['author']); ?>"
         },
         "datePublished": "<?php print($this->article['date']->format('F j, Y')); ?>",
-        "dateModified": "<?php print($this->article['date']->format('F j, Y')); ?>",
+        "dateModified": "<?php print(date('F j, Y',$this->article['modified'])); ?>",
         "image": {
           "@type": "ImageObject",
           "url": "<?php print($this->Get_post_img()); ?>",
@@ -334,7 +333,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         $appid=$options->plugin('AMP')->baiduAPPID;
         $token=$options->plugin('AMP')->baiduTOKEN;
-        $api= "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=batch";
+        $api= "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=realtime";
 
         $article=Typecho_Widget::widget('AMP_Action')->getArticleByCid($class->cid);
 
