@@ -53,7 +53,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     {
         
         if (Helper::options()->plugin('AMP')->ampSiteMap == 0) {
-            die('未开启ampSiteMap功能！');
+            throw new Typecho_Widget_Exception('未开启ampSiteMap功能！');
         }
         
         $this->MakeSiteMap('amp');
@@ -64,7 +64,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     {
         
         if (Helper::options()->plugin('AMP')->mipSiteMap == 0) {
-            die('未开启mipSiteMap功能！');
+            throw new Typecho_Widget_Exception('未开启mipSiteMap功能！');
         }
         
         $this->MakeSiteMap('mip');
@@ -74,8 +74,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     public function MIPpage()
     {
         $this->article = $this->getArticle($this->request->slug);
+        $imgData=$this->GetPostImg();
 
-        if ($this->article['isMarkdown']) {?>
+        if (isset($this->article['isblank'])) {
+            throw new Typecho_Widget_Exception('不存在或已删除');
+        }?>
             <!DOCTYPE html>
             <html mip>
             <head>
@@ -92,7 +95,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                         "appid": "<?php print(Helper::options()->plugin('AMP')->baiduAPPID);?>",
                         "title": "<?php print($this->article['title']); ?>",
                         "images": [
-                            "<?php print($this->Get_post_img()); ?>"
+                            "<?php print($imgData['url']); ?>"
                             ],
                         "description": "<?php print(mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "..."); ?>",
                         "pubDate": "<?php print($this->article['date']->format('Y-m-d\TH:i:s')); ?>",
@@ -115,6 +118,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 </div>
                 <p class="notice">当前页面是本站的「<a href="https://www.mipengine.org/">Baidu MIP</a>」版。查看和发表评论请点击：<a
                         href="<?php print($this->article['permalink']); ?>#comments">完整版 »</a></p>
+                <?php if(!$this->article['isMarkdown']){print('<p class="notice">因本文不是用Markdown格式的编辑器书写的，转换的页面可能不符合MIP标准。</p>');} ?>
             </div>
             <hr>
             <!--mip 运行环境-->
@@ -123,17 +127,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             </body>
             </html>
             <?php
-        } else {
-            die('Delete');
-        }
-
-
     }
     
     public function AMPlist()
     {
         if (Helper::options()->plugin('AMP')->ampIndex == 0) {
-            die('未开启AMP版首页！');
+            throw new Typecho_Widget_Exception('未开启AMP版首页！');
         }
         $currentPage = $this->request->list_id;
         $articles = $this->MakeArticleList('amp', $currentPage, 5);
@@ -164,7 +163,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function AMPindex(){
         if (Helper::options()->plugin('AMP')->ampIndex == 0) {
-            die('未开启AMP版首页！');
+            throw new Typecho_Widget_Exception('未开启AMP版首页！');
         }
         ?>
         <!doctype html>
@@ -237,9 +236,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     public function AMPpage()
     {
         $this->article = $this->getArticle($this->request->slug);
-
-        if ($this->article['isMarkdown']) {
-            ?>
+        $imgData=$this->GetPostImg();
+    
+        if (isset($this->article['isblank'])) {
+            throw new Typecho_Widget_Exception('不存在或已删除');
+        }?>
             <!doctype html>
             <html amp lang="zh">
             <head>
@@ -262,9 +263,9 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         "dateModified": "<?php print(date('F j, Y',$this->article['modified'])); ?>",
         "image": {
           "@type": "ImageObject",
-          "url": "<?php print($this->Get_post_img()); ?>",
-          "width": 700,
-          "height": 400
+          "url": "<?php print($imgData['url']); ?>",
+          "width": "<?php print($imgData['width']); ?>",
+          "height": "<?php print($imgData['height']); ?>"
         },
          "publisher": {
           "@type": "Organization",
@@ -294,30 +295,28 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 </div>
                 <p class="notice">当前页面是本站的「<a href="//www.ampproject.org/zh_cn/">Google AMP</a>」版。查看和发表评论请点击：<a
                         href="<?php print($this->article['permalink']); ?>#comments">完整版 »</a></p>
+                <?php if(!$this->article['isMarkdown']){print('<p class="notice">因本文不是用Markdown格式的编辑器书写的，转换的页面可能不符合AMP标准。</p>');} ?>
             </article>
 
             </body>
             </html>
             <?php
-        } else {
-            die('Delete');
-        }
     }
     
     public function sendRealtime($contents, $class)
     {
+        //获取系统配置
+        $options = Helper::options();
+        
         //如果文章属性为隐藏或滞后发布
         if ('publish' != $contents['visibility'] || $contents['created'] > time()) {
             return;
         }
-        
+    
         //如果没有开启自动提交功能
-        if (Helper::options()->plugin('AMP')->mipAutoSubmit == 0) {
+        if ($options->plugin('AMP')->mipAutoSubmit == 0) {
             return;
         }
-        
-        //获取系统配置
-        $options = Helper::options();
         
         //判断是否配置相关信息
         if (is_null($options->plugin('AMP')->baiduAPPID) or is_null($options->plugin('AMP')->baiduTOKEN)) {
@@ -381,13 +380,16 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         
         if (count($article_src) > 0) {
             $article = Typecho_Widget::widget("Widget_Abstract_Contents")->push($article_src);
-//            $select = $this->db->select('table.users.screenName')
-//                ->from('table.users')
-//                ->where('uid = ?', $article['authorId']);
-//            $author = $this->db->fetchRow($select);
-//            $article['author'] = $author['screenName'];
-            $article['text'] = Markdown::convert($article['text']);
-            
+            $select = $this->db->select('table.users.screenName')
+                ->from('table.users')
+                ->where('uid = ?', $article['authorId']);
+            $author = $this->db->fetchRow($select);
+            $article['author'] = $author['screenName'];
+            if($article['isMarkdown']==True){
+                $article['text'] = Markdown::convert($article['text']);
+            }else{
+                $article['text'] = Typecho_Widget::widget("Widget_Abstract_Contents")->autoP($article['text']);
+            }
             $slugtemp = $this->getSlugRule();
             $slug = str_replace('[slug]', $article['slug'], $slugtemp);
             $slug = str_replace('[cid:digital]', $article['cid'], $slug);
@@ -445,7 +447,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     }
     
     
-    private function Get_post_img()
+    private function GetPostImg()
     {
         $text = $this->article['text'];
         
@@ -462,7 +464,19 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         } else {
             $img_url = $this->defaultPIC;
         }
-        return $img_url;
+        list($width, $height, $type, $attr) = getimagesize($img_url);
+        if (!isset($width)) {
+            $width = '700';
+        }
+        if (!isset($height)) {
+            $height = '400';
+        }
+        $imgData=array(
+            'url'=>$img_url,
+            'width'=>$width,
+            'height'=>$height,
+            );
+        return $imgData;
     }
     
     private function MIPInit($text)
@@ -471,6 +485,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $text = str_replace('<img', '<mip-img  layout="responsive" ', $text);
         $text = str_replace('img>', 'mip-img>', $text);
         $text = str_replace('<!- toc end ->', '', $text);
+        $text = str_replace('<style', '<style mip-custom" ', $text);
         $text = str_replace('javascript:content_index_toggleToc()', '#', $text);
         return $text;
     }
@@ -480,6 +495,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $text = $this->IMGsize($text);
         $text = str_replace('<img', '<amp-img  layout="responsive" ', $text);
         $text = str_replace('img>', 'amp-img>', $text);
+        $text = str_replace('<style', '<style amp-custom" ', $text);
         $text = str_replace('<!- toc end ->', '', $text);
         $text = str_replace('javascript:content_index_toggleToc()', '#', $text);
         return $text;
