@@ -117,7 +117,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                     <?php print($this->MIPInit($this->article['text'])); ?>
                 </div>
                 <p class="notice">当前页面是本站的「<a href="https://www.mipengine.org/">Baidu MIP</a>」版。查看和发表评论请点击：<a
-                        href="<?php print($this->article['permalink']); ?>#comments">完整版 »</a></p>
+                        href="<?php print($this->article['permalink']); ?>">完整版 »</a></p>
                 <?php if(!$this->article['isMarkdown']){print('<p class="notice">因本文不是用Markdown格式的编辑器书写的，转换的页面可能不符合MIP标准。</p>');} ?>
             </div>
             <hr>
@@ -294,7 +294,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                     <?php print($this->AMPInit($this->article['text'])); ?>
                 </div>
                 <p class="notice">当前页面是本站的「<a href="//www.ampproject.org/zh_cn/">Google AMP</a>」版。查看和发表评论请点击：<a
-                        href="<?php print($this->article['permalink']); ?>#comments">完整版 »</a></p>
+                        href="<?php print($this->article['permalink']); ?>">完整版 »</a></p>
                 <?php if(!$this->article['isMarkdown']){print('<p class="notice">因本文不是用Markdown格式的编辑器书写的，转换的页面可能不符合AMP标准。</p>');} ?>
             </article>
 
@@ -411,6 +411,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $sql = $db->select()->from('table.contents')
             ->where('table.contents.status = ?', 'publish')
             ->where('table.contents.type = ?', 'post')
+            ->where('table.contents.created <= unix_timestamp(now())', 'post') //Fix 避免未达到时间的文章提前曝光
+            ->where('table.contents.password IS NULL') //Fix 避免加密文章泄露
             ->order('table.contents.created', Typecho_Db::SORT_DESC);
         if ($page > 0 and $pageSize > 0) {
             $countSql = clone $sql;
