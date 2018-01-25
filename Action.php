@@ -158,7 +158,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             );
         }
         $arr = array('items' => $article_data);
-        echo json_encode($arr);
+	    header("Access-Control-Allow-Origin: *");
+	    echo json_encode($arr);
     }
 
     public function AMPindex(){

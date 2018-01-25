@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.4.5
+ * @version 0.4.6
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
