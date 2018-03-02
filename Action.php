@@ -25,7 +25,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     public static function headlink()
     {
         $widget = Typecho_Widget::widget('Widget_Archive');
-        $slugtemp = Typecho_Widget::widget('AMP_Action')->getSlugRule();
+
         $ampurl = $mipurl = '';
         
         if ($widget->is('index') and !isset($widget->request->page)) {
@@ -36,12 +36,19 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         
         if ($widget->is('post')) {
-            $slug = str_replace('[slug]', $widget->request->slug, $slugtemp);
-            $slug = str_replace('[cid:digital]', $widget->request->cid, $slug);
-            $fullURL = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
-            $ampurl = "\n<link rel=\"amphtml\" href=\"{$fullURL}\">\n";
-            $fullURL = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
-            $mipurl = "<link rel=\"miphtml\" href=\"{$fullURL}\">\n";
+            if(isset($widget->request->cid)){
+                $target=$widget->request->cid;
+            }
+            if(isset($widget->request->slug)){
+                $target=$widget->request->slug;
+            }
+
+            if(isset($target)){
+                $fullURL = Typecho_Common::url("amp/{$target}", Helper::options()->index);
+                $ampurl = "\n<link rel=\"amphtml\" href=\"{$fullURL}\">\n";
+                $fullURL = Typecho_Common::url("mip/{$target}", Helper::options()->index);
+                $mipurl = "<link rel=\"miphtml\" href=\"{$fullURL}\">\n";
+            }
         }
         $headurl = $ampurl . $mipurl;
         
@@ -73,7 +80,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function MIPpage()
     {
-        $this->article = $this->getArticle($this->request->slug);
+        $this->article = $this->getArticle($this->request->target);
         $imgData=$this->GetPostImg();
 
         if (isset($this->article['isblank'])) {
@@ -236,9 +243,9 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function AMPpage()
     {
-        $this->article = $this->getArticle($this->request->slug);
+        $this->article = $this->getArticle($this->request->target);
         $imgData=$this->GetPostImg();
-    
+
         if (isset($this->article['isblank'])) {
             throw new Typecho_Widget_Exception('不存在或已删除');
         }?>
@@ -349,12 +356,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
     }
     
-    public function getArticle($slug)
+    public function getArticle($target)
     {
-        $tempslug = explode('.', $slug)[0];
-        $article = $this->getArticleBySlug($tempslug);
+        $tempTarget = explode('.', $target)[0];
+        $article = $this->getArticleBySlug($tempTarget);
         if (isset($article['isblank'])) {
-            $article = $article = $this->getArticleByCid($tempslug);
+            $article = $article = $this->getArticleByCid($tempTarget);
         }
         return $article;
     }
@@ -391,11 +398,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             }else{
                 $article['text'] = Typecho_Widget::widget("Widget_Abstract_Contents")->autoP($article['text']);
             }
-            $slugtemp = $this->getSlugRule();
-            $slug = str_replace('[slug]', $article['slug'], $slugtemp);
-            $slug = str_replace('[cid:digital]', $article['cid'], $slug);
+            $targetTemp = $this->getSlugRule();
+            $target = str_replace('[slug]', $article['slug'], $targetTemp);
+            $target = str_replace('[cid:digital]', $article['cid'], $target);
             
-            $article['mipurl'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);;
+            $article['mipurl'] = Typecho_Common::url("mip/{$target}", Helper::options()->index);;
+            $article['ampurl'] = Typecho_Common::url("amp/{$target}", Helper::options()->index);;
         } else {
             $article = array(
                 'isMarkdown' => false,
@@ -421,7 +429,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             $sql = $sql->page($page, $pageSize);
         }
         $articles = $db->fetchAll($sql);
-        $slugtemp = $this->getSlugRule();
+        $targetTemp = $this->getSlugRule();
         $articleList = array();
         
         foreach ($articles AS $article) {
@@ -437,12 +445,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             $article['month'] = $article['date']->month;
             $article['day'] = $article['date']->day;
             
-            $slug = str_replace('[slug]', $article['slug'], $slugtemp);
-            $slug = str_replace('[cid:digital]', $article['cid'], $slug);
+            $target = str_replace('[slug]', $article['slug'], $targetTemp);
+            $target = str_replace('[cid:digital]', $article['cid'], $target);
             if ($linkType == 'mip') {
-                $article['permalink'] = Typecho_Common::url("mip/{$slug}", Helper::options()->index);
+                $article['permalink'] = Typecho_Common::url("mip/{$target}", Helper::options()->index);
             } else {
-                $article['permalink'] = Typecho_Common::url("amp/{$slug}", Helper::options()->index);
+                $article['permalink'] = Typecho_Common::url("amp/{$target}", Helper::options()->index);
             }
             $articleList[] = $article;
         }
