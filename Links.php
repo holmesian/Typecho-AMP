@@ -40,13 +40,20 @@ if (isset($_GET['send'])) {
 	}
 	
 	$articleList = Typecho_Widget::widget('AMP_Action')->MakeArticleList($sendtype, $page, 20);
-	
+
+
 	//接口类型
-	if (empty($api)) {
-		$api = Helper::options()->plugin('AMP')->baiduAPI;
-		$api = preg_replace("/&type=[a-z]+/", "&type={$sendtype}", $api);//替换接口中的类型
-	}
-	
+	if (!isset($api)) {
+        if (empty(Helper::options()->plugin('AMP')->baiduAPI)){
+            throw new Typecho_Widget_Exception('未设置MIP/AMP推送接口调用地址!');
+            }else{
+            $api = Helper::options()->plugin('AMP')->baiduAPI;
+            $api = preg_replace("/&type=[a-z]+/", "&type={$sendtype}", $api);//替换接口中的类型
+
+        }
+    }
+
+//    var_dump(isset($api));
 	$urls = array();
 	foreach ($articleList AS $article) {
 		echo '正在提交:' . $article['permalink'] . " <br>";
@@ -55,20 +62,27 @@ if (isset($_GET['send'])) {
 	
 	if (count($urls) > 0) {
 		
-		$ch = curl_init();
-		$curl_options = array(
-			CURLOPT_URL => $api,
-			CURLOPT_POST => true,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_POSTFIELDS => implode("\n", $urls),
-			CURLOPT_HTTPHEADER => array('Content-Type: text/plain'),
-		);
-		curl_setopt_array($ch, $curl_options);
-		$result = curl_exec($ch);
+//		$ch = curl_init();
+//		$curl_options = array(
+//			CURLOPT_URL => $api,
+//			CURLOPT_POST => true,
+//			CURLOPT_RETURNTRANSFER => true,
+//			CURLOPT_POSTFIELDS => implode("\n", $urls),
+//			CURLOPT_HTTPHEADER => array('Content-Type: text/plain'),
+//		);
+//		curl_setopt_array($ch, $curl_options);
+//        $result = curl_exec($ch);
+
+        $http = Typecho_Http_Client::get();
+        $http->setData(implode("\n", $urls));
+        $http->setHeader('Content-Type', 'text/plain');
+        $result = $http->send($api);
+
 //    string '{"remain":4999960,"success":0,"not_valid":[""]}'
 //    string '{"success_mip":20,"remain_mip":9980}' (length=36)
 //    $result='{"success_amp":20,"remain_amp":9980}';
-//string(43) "{"success_batch":20,"remain_batch":4999960}"
+//    string(43) "{"success_batch":20,"remain_batch":4999960}"
+
 		$obj = json_decode($result, true);
 		$name = "success_{$type}";
 		
