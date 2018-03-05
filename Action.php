@@ -85,7 +85,13 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
         if (isset($this->article['isblank'])) {
             throw new Typecho_Widget_Exception('不存在或已删除');
-        }?>
+        }
+        $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
+        $spider = strtolower('Baiduspider');
+        if (strpos($userAgent, $spider) == false) {//不是百度的蜘蛛
+            header("Location: {$this->article['permalink']}");
+        }
+        ?>
             <!DOCTYPE html>
             <html mip>
             <head>
@@ -248,7 +254,13 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
         if (isset($this->article['isblank'])) {
             throw new Typecho_Widget_Exception('不存在或已删除');
-        }?>
+        }
+        $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
+        $spider = strtolower('Googlebot');
+        if (strpos($userAgent, $spider) == false) {//不是Google的蜘蛛
+            header("Location: {$this->article['permalink']}");
+        }
+        ?>
             <!doctype html>
             <html amp lang="zh">
             <head>

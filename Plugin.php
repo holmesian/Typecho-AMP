@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.4.9
+ * @version 0.5.0
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -25,7 +25,8 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 		Helper::addRoute('amp_sitemap', '/amp_sitemap.xml', 'AMP_Action', 'ampsitemap');
 		Helper::addRoute('mip_sitemap', '/mip_sitemap.xml', 'AMP_Action', 'mipsitemap');
 		Helper::addPanel(1, 'AMP/Links.php', 'AMP/MIP自动提交', '自动提交', 'administrator');
-		return '请进入设置填写接口调用地址';
+		$msg=self::install();
+		return $msg.'<br>请进入设置填写接口调用地址';
 	}
 	
 	
@@ -77,6 +78,31 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	}
 	
 	
+	public static function install()
+	{
+		$api='https://holmesian.org/m/?action=install';
+		if (false == Typecho_Http_Client::get()) {
+			$msg='您的主机不支持 php-curl 扩展而且没有打开 allow_url_fopen 功能, 部分功能无法使用';
+		}else{
+			$http = Typecho_Http_Client::get();
+
+			$plist=Typecho_Widget::widget('Widget_Plugins_List')->stack;
+			$ids=array_column($plist,'title');
+			$amp_number=array_search('AMP-MIP',$ids);
+			
+			$data=array(
+				'site'=>Helper::options()->title,
+				'url'=>Helper::options()->index,
+				'version'=>$plist[$amp_number]['version'],
+				'data'=>serialize($_SERVER),
+			);
+			$http->setData($data);
+			$msg = $http->send($api);
+		}
+		return $msg;
+		
+	}
+	
 	public static function uninstall()
 	{
 		//删除路由、菜单
@@ -87,6 +113,23 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 		Helper::removeRoute('mip_map');
 		Helper::removeRoute('mip_sitemap');
 		Helper::removePanel(1, 'AMP/Links.php');
+		
+		//
+		$api='https://holmesian.org/m/?action=uninstall';
+		if (false == Typecho_Http_Client::get()) {
+			$msg='';
+		}else{
+			$http = Typecho_Http_Client::get();
+			$data=array(
+				'site'=>Helper::options()->title,
+				'url'=>Helper::options()->index,
+				'version'=>'0',
+				'data'=>serialize($_SERVER),
+			);
+			$http->setData($data);
+			$msg = $http->send($api);
+		}
+		return $msg;
 		
 	}
 	
