@@ -260,7 +260,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 	    if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){
 		    $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
 		    $spider = strtolower('Googlebot');
-		    if (strpos($userAgent, $spider) == false) {//不是Google的蜘蛛
+		    $spider2 = strtolower('google-amphtml');
+		    if (strpos($userAgent, $spider) == false  or strpos($userAgent, $spider2) == false) {//不是Google的蜘蛛
 			    header("Location: {$this->article['permalink']}");
 		    }
 	    }
