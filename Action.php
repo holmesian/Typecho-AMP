@@ -493,7 +493,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             $img_url = $this->defaultPIC;
         }
         try {
-            list($width, $height, $type, $attr) = getimagesize($img_url);
+            list($width, $height, $type, $attr) = @getimagesize($img_url);
         }
         catch (Exception $e){
             $width = '700';
