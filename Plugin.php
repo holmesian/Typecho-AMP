@@ -26,7 +26,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 		Helper::addRoute('mip_sitemap', '/mip_sitemap.xml', 'AMP_Action', 'mipsitemap');
 		Helper::addPanel(1, 'AMP/Links.php', 'AMP/MIP自动提交', '自动提交', 'administrator');
 		$msg=self::install();
-		return $msg.'<br>请进入设置填写接口调用地址';
+		return $msg.'请进入设置填写接口调用地址';
 	}
 	
 	
@@ -98,7 +98,6 @@ class AMP_Plugin implements Typecho_Plugin_Interface
             $plist = Typecho_Widget::widget('Widget_Plugins_List')->stack;
             $ids = array_column($plist, 'title');
             $amp_number = array_search('AMP-MIP', $ids);
-
             $data = array(
                 'site' => Helper::options()->title,
                 'url' => Helper::options()->index,
@@ -107,10 +106,11 @@ class AMP_Plugin implements Typecho_Plugin_Interface
             );
             $http->setData($data);
             $msg = $http->send($api);
-            return $msg;
         }
         catch (Exception $e){
             $msg='注册出错';
+        }
+        finally{
             return $msg;
         }
 		
@@ -130,9 +130,10 @@ class AMP_Plugin implements Typecho_Plugin_Interface
             );
             $http->setData($data);
             $msg = $http->send($api);
-            return $msg;
         } catch (Exception $e) {
             $msg = '注销出错';
+        }
+        finally{
             return $msg;
         }
 

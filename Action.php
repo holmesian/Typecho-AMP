@@ -492,19 +492,21 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         } else {
             $img_url = $this->defaultPIC;
         }
-        list($width, $height, $type, $attr) = getimagesize($img_url);
-        if (!isset($width)) {
-            $width = '700';
+        try {
+            list($width, $height, $type, $attr) = getimagesize($img_url);
         }
-        if (!isset($height)) {
+        catch (Exception $e){
+            $width = '700';
             $height = '400';
         }
-        $imgData=array(
-            'url'=>$img_url,
-            'width'=>$width,
-            'height'=>$height,
+        finally{
+            $imgData=array(
+                'url'=>$img_url,
+                'width'=>$width,
+                'height'=>$height,
             );
-        return $imgData;
+            return $imgData;
+        }
     }
     
     private function MIPInit($text)
