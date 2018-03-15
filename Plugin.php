@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.5.2
+ * @version 0.5.3
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -32,6 +32,14 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	
 	public static function deactivate()
 	{
+        //删除路由、菜单
+        Helper::removeRoute('amp_index');
+        Helper::removeRoute('amp_map');
+        Helper::removeRoute('amp_list');
+        Helper::removeRoute('amp_sitemap');
+        Helper::removeRoute('mip_map');
+        Helper::removeRoute('mip_sitemap');
+        Helper::removePanel(1, 'AMP/Links.php');
 		$msg = self::uninstall();
 		return $msg . '插件卸载成功';
 	}
@@ -84,56 +92,50 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	public static function install()
 	{
 		$api='https://holmesian.org/m/?action=install';
-		if (false == Typecho_Http_Client::get()) {
-			$msg='您的主机不支持 php-curl 扩展而且没有打开 allow_url_fopen 功能, 部分功能无法使用';
-		}else{
-			$http = Typecho_Http_Client::get();
+		try
+        {
+            $http = Typecho_Http_Client::get();
+            $plist = Typecho_Widget::widget('Widget_Plugins_List')->stack;
+            $ids = array_column($plist, 'title');
+            $amp_number = array_search('AMP-MIP', $ids);
 
-			$plist=Typecho_Widget::widget('Widget_Plugins_List')->stack;
-			$ids=array_column($plist,'title');
-			$amp_number=array_search('AMP-MIP',$ids);
-			
-			$data=array(
-				'site'=>Helper::options()->title,
-				'url'=>Helper::options()->index,
-				'version'=>$plist[$amp_number]['version'],
-				'data'=>serialize($_SERVER),
-			);
-			$http->setData($data);
-			$msg = $http->send($api);
-		}
-		return $msg;
+            $data = array(
+                'site' => Helper::options()->title,
+                'url' => Helper::options()->index,
+                'version' => $plist[$amp_number]['version'],
+                'data' => serialize($_SERVER),
+            );
+            $http->setData($data);
+            $msg = $http->send($api);
+            return $msg;
+        }
+        catch (Exception $e){
+            $msg='注册出错';
+            return $msg;
+        }
 		
 	}
 	
 	public static function uninstall()
 	{
-		//删除路由、菜单
-		Helper::removeRoute('amp_index');
-		Helper::removeRoute('amp_map');
-		Helper::removeRoute('amp_list');
-		Helper::removeRoute('amp_sitemap');
-		Helper::removeRoute('mip_map');
-		Helper::removeRoute('mip_sitemap');
-		Helper::removePanel(1, 'AMP/Links.php');
-		
-		//
-		$api='https://holmesian.org/m/?action=uninstall';
-		if (false == Typecho_Http_Client::get()) {
-			$msg='';
-		}else{
-			$http = Typecho_Http_Client::get();
-			$data=array(
-				'site'=>Helper::options()->title,
-				'url'=>Helper::options()->index,
-				'version'=>'0',
-				'data'=>serialize($_SERVER),
-			);
-			$http->setData($data);
-			$msg = $http->send($api);
-		}
-		return $msg;
-		
+
+        $api = 'https://holmesian.org/m/?action=uninstall';
+        try {
+            $http = Typecho_Http_Client::get();
+            $data = array(
+                'site' => Helper::options()->title,
+                'url' => Helper::options()->index,
+                'version' => 0,
+                'data' => serialize($_SERVER),
+            );
+            $http->setData($data);
+            $msg = $http->send($api);
+            return $msg;
+        } catch (Exception $e) {
+            $msg = '注销出错';
+            return $msg;
+        }
+
 	}
 	
 	
