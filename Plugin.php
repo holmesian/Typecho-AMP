@@ -4,14 +4,16 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.5.3
+ * @version 0.5.4
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 class AMP_Plugin implements Typecho_Plugin_Interface
 {
-	
+    private static $tableName = 'PageCache';
+    private static $version = '0.5.4';
+
 	public static function activate()
 	{
 		//挂载发布文章接口
@@ -91,53 +93,75 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	
 	public static function install()
 	{
-		$api='https://holmesian.org/m/?action=install';
-		try
+//		$msg=self::DBsetup();   //TODO  Cache
+		$msg=self::call_me('install');
+		return $msg;
+	}
+	
+	public static function uninstall()
+	{
+        //TODO  Cache
+//        $installDb = Typecho_Db::get();
+//        $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . self::$tableName);
+        $msg=self::call_me('uninstall');
+        return $msg;
+
+	}
+
+	public static function call_me($type){
+
+        $api="https://holmesian.org/m/?action={$type}";
+        try
         {
             $http = Typecho_Http_Client::get();
-            $plist = Typecho_Widget::widget('Widget_Plugins_List')->stack;
-            $ids = array_column($plist, 'title');
-            $amp_number = array_search('AMP-MIP', $ids);
+//            $plist = Typecho_Widget::widget('Widget_Plugins_List')->stack;
+//            $ids = array_column($plist, 'title');
+//            $amp_number = array_search('AMP-MIP', $ids);
             $data = array(
                 'site' => Helper::options()->title,
                 'url' => Helper::options()->index,
-                'version' => $plist[$amp_number]['version'],
+                'version' => self::$version,
                 'data' => serialize($_SERVER),
             );
             $http->setData($data);
             $msg = $http->send($api);
         }
         catch (Exception $e){
-            $msg='注册出错';
+            $msg='通知出错';
         }
         finally{
             return $msg;
         }
-		
-	}
-	
-	public static function uninstall()
-	{
+    }
 
-        $api = 'https://holmesian.org/m/?action=uninstall';
-        try {
-            $http = Typecho_Http_Client::get();
-            $data = array(
-                'site' => Helper::options()->title,
-                'url' => Helper::options()->index,
-                'version' => 0,
-                'data' => serialize($_SERVER),
-            );
-            $http->setData($data);
-            $msg = $http->send($api);
-        } catch (Exception $e) {
-            $msg = '注销出错';
-        }
-        finally{
-            return $msg;
-        }
 
-	}
+    //TODO  Cache
+//	public static function DBsetup()
+//    {
+//        $installDb = Typecho_Db::get();
+//        $prefix = $installDb->getPrefix();
+//        $cacheTable = $prefix. self::$tableName;
+//        try {
+//            $installDb->query("CREATE TABLE `$cacheTable` (
+//                        `hash`      varchar(200)  NOT NULL,
+//                        `cache`   longtext      NOT NULL,
+//                        `dateline` int(10) NOT NULL DEFAULT '0',
+//                        `expire`  int(8) NOT NULL DEFAULT '0',
+//                        UNIQUE KEY `hash` (`hash`)
+//                        ) DEFAULT CHARSET=utf8");
+//            return('缓存表创建成功！');
+//        } catch (Typecho_Db_Exception $e) {
+//            $code = $e->getCode();
+//            if(('Mysql' == $type && 1050 == $code)) {
+//                $script = 'SELECT `hash`, `cache`, `dateline`, `expire` from `' . $cacheTable . '`';
+//                $installDb->query($script, Typecho_Db::READ);
+//                return '缓存表已存在！';
+//            } else {
+//                throw new Typecho_Plugin_Exception('缓存表建立失败：'.$code);
+//            }
+//        }
+//    }
+
 	
 	
 }
