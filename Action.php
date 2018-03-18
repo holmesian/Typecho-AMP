@@ -219,11 +219,6 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $urls = array($article['mipurl'],);
         
         try {
-            //为了保证成功调用，先做判断
-            if (false == Typecho_Http_Client::get()) {
-                throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持 php-curl 扩展而且没有打开 allow_url_fopen 功能, 无法正常使用此功能'));
-            }
-            
             //发送请求
             $http = Typecho_Http_Client::get();
             $http->setData(implode("\n", $urls));
@@ -356,12 +351,16 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         try {
             list($width, $height, $type, $attr) = @getimagesize($img_url);
+            $imgData=array(
+                'url'=>$img_url,
+                'width'=>$width,
+                'height'=>$height,
+            );
+            return $imgData;
         }
         catch (Exception $e){
             $width = '700';
             $height = '400';
-        }
-        finally{
             $imgData=array(
                 'url'=>$img_url,
                 'width'=>$width,
@@ -407,7 +406,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 } else {
                     $url = $_SERVER['DOCUMENT_ROOT'] . $m[1];
                 }
-                list($width, $height, $type, $attr) = getimagesize($url);
+                list($width, $height, $type, $attr) = @getimagesize($url);
                 if (!isset($width)) {
                     $width = '500';
                 }
