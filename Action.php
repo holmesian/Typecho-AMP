@@ -373,6 +373,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     private function MIPInit($text)
     {
         $text = $this->IMGsize($text);
+        $text = $this->closeTags($text);
+
         $text = str_replace('<img', '<mip-img  layout="responsive" ', $text);
         $text = str_replace('img>', 'mip-img>', $text);
         $text = str_replace('<!- toc end ->', '', $text);
@@ -384,11 +386,25 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     private function AMPInit($text)
     {
         $text = $this->IMGsize($text);
+        $text = $this->closeTags($text);
+
         $text = str_replace('<img', '<amp-img  layout="responsive" ', $text);
         $text = str_replace('img>', 'amp-img>', $text);
         $text = str_replace('<style', '<style amp-custom" ', $text);
         $text = str_replace('<!- toc end ->', '', $text);
         $text = str_replace('javascript:content_index_toggleToc()', '#', $text);
+        return $text;
+    }
+
+    private function closeTags($text)
+    {
+        preg_match_all('/<img ([\s\S]*?)>/', $text, $mat);
+        $src=array_unique($mat[0]);
+        for ($i = 0; $i < count($src); $i++)
+        {
+            $plus =  $src[$i].'</img>';
+            $text = str_replace( $mat[0][$i],$plus, $text);
+        }
         return $text;
     }
     

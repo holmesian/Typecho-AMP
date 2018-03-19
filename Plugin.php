@@ -4,7 +4,7 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.5.5
+ * @version 0.5.6
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
@@ -12,7 +12,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 class AMP_Plugin implements Typecho_Plugin_Interface
 {
     private static $tableName = 'PageCache';
-    private static $version = '0.5.5';
+    private static $version = '0.5.6';
 
 	public static function activate()
 	{
