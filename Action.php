@@ -388,7 +388,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $text = $this->IMGsize($text);
         $text = $this->closeTags($text);
 
-        $text = str_replace('<img', '<amp-img  layout="responsive" ', $text);
+        $text = str_replace('<img', '<amp-img  layout="responsive" popup ', $text);
         $text = str_replace('img>', 'amp-img>', $text);
         $text = str_replace('<style', '<style amp-custom" ', $text);
         $text = str_replace('<!- toc end ->', '', $text);
