@@ -4,10 +4,9 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     public function action()
     {
-        
+
     }
-    
-    
+
     public function __construct($request, $response, $params = NULL)
     {
         parent::__construct($request, $response, $params);
@@ -15,12 +14,14 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->defaultPIC = Helper::options()->plugin('AMP')->defaultPIC;
         $this->publisher = Helper::options()->title;
         $this->db = Typecho_Db::get();
+        $this->tablename = $this->db->getPrefix().'PageCache';
         $this->baseurl = Helper::options()->index;
         $this->baseurl = str_replace("https://", "//", $this->baseurl);
         $this->baseurl = str_replace("http://", "//", $this->baseurl);
         
     }
-    
+
+
     
     public static function headlink()
     {
@@ -80,35 +81,43 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function MIPpage()
     {
-        $this->article = $this->getArticle($this->request->target);
+        $requestHash = $this->request->getPathinfo();
+        $context=$this->get($requestHash); //查找是否已经缓存
 
-        if (isset($this->article['isblank'])) {
-            throw new Typecho_Widget_Exception('不存在或已删除');
+        if(!is_null($context)){//有缓存的情况直接输出
+            print($context);
+        }else{//没缓存的生成页面再进行缓存
+            $this->article = $this->getArticle($this->request->target);
+
+            if (isset($this->article['isblank'])) {
+                throw new Typecho_Widget_Exception('不存在或已删除');
+            }
+            if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){//判断是否是对应的爬虫来访
+                $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
+                $spider = strtolower('Baiduspider');
+                if (strpos($userAgent, $spider) == false) {//不是百度的蜘蛛
+                    header("Location: {$this->article['permalink']}");
+                }
+            }
+            $MIPpage=array(
+                'title'=>$this->article['title'],
+                'permalink'=>$this->article['permalink'],
+                'mipurl'=>$this->article['mipurl'],
+                'modified'=>date('Y-m-d\TH:i:s',$this->article['modified']),
+                'date'=>$this->article['date'],
+                'isMarkdown'=>$this->article['isMarkdown'],
+                'imgData'=>$this->GetPostImg(),
+                'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
+                'desc'=>mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "...",
+                'publisher'=>$this->publisher,
+                'MIPtext'=>$this->MIPInit($this->article['text'])
+            );
+            ob_start();  //TODO cache
+            require_once('templates/MIPpage.php');
+            $cache = ob_get_contents();
+//        ob_end_clean();
+            $this->set($requestHash,$cache);
         }
-	    if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){
-		    $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
-		    $spider = strtolower('Baiduspider');
-		    if (strpos($userAgent, $spider) == false) {//不是百度的蜘蛛
-			    header("Location: {$this->article['permalink']}");
-		    }
-	    }
-        $MIPpage=array(
-            'title'=>$this->article['title'],
-            'permalink'=>$this->article['permalink'],
-            'mipurl'=>$this->article['mipurl'],
-            'modified'=>date('Y-m-d\TH:i:s',$this->article['modified']),
-            'date'=>$this->article['date'],
-            'isMarkdown'=>$this->article['isMarkdown'],
-            'imgData'=>$this->GetPostImg(),
-            'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
-            'desc'=>mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "...",
-            'publisher'=>$this->publisher,
-            'MIPtext'=>$this->MIPInit($this->article['text'])
-        );
-//        ob_start();  //TODO cache
-        require_once('templates/MIPpage.php');
-//        file_put_contents('index.shtml', ob_get_contents());
-
     }
 
     
@@ -157,38 +166,53 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     public function AMPpage()
     {
-        $this->article = $this->getArticle($this->request->target);
 
-        if (isset($this->article['isblank'])) {
-            throw new Typecho_Widget_Exception('不存在或已删除');
+        $requestHash = $this->request->getPathinfo();
+        $context=$this->get($requestHash); //查找是否已经缓存
+
+        if(!is_null($context)){//有缓存的情况直接输出
+            print($context);
         }
-	    if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){
-		    $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
-		    $spider = strtolower('Googlebot');
-		    $spider2 = strtolower('google-amphtml');
-		    if (strpos($userAgent, $spider) == false  or strpos($userAgent, $spider2) == false) {//不是Google的蜘蛛
-			    header("Location: {$this->article['permalink']}");
-		    }
-	    }
+        else{
+            $this->article = $this->getArticle($this->request->target);
 
-        $AMPpage=array(
-            'title'=>$this->article['title'],
-            'permalink'=>$this->article['permalink'],
-            'mipurl'=>$this->article['mipurl'],
-            'modified'=>date('F j, Y',$this->article['modified']),
-            'date'=>$this->article['date'],
-            'author'=>$this->article['author'],
-            'LOGO'=>$this->LOGO,
-            'isMarkdown'=>$this->article['isMarkdown'],
-            'imgData'=>$this->GetPostImg(),
-            'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
-            'desc'=>mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "...",
-            'publisher'=>$this->publisher,
-            'AMPtext'=>$this->AMPInit($this->article['text'])
-        );
+            if (isset($this->article['isblank'])) {
+                throw new Typecho_Widget_Exception('不存在或已删除');
+            }
+            if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){//判断是否是对应的爬虫来访
+                $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
+                $spider = strtolower('Googlebot');
+                $spider2 = strtolower('google-amphtml');
+                if (strpos($userAgent, $spider) == false  or strpos($userAgent, $spider2) == false) {//不是Google的蜘蛛
+                    header("Location: {$this->article['permalink']}");
+                }
+            }
 
-        //TODO cache
-       require_once ('templates/AMPpage.php');
+            $AMPpage=array(
+                'title'=>$this->article['title'],
+                'permalink'=>$this->article['permalink'],
+                'mipurl'=>$this->article['mipurl'],
+                'modified'=>date('F j, Y',$this->article['modified']),
+                'date'=>$this->article['date'],
+                'author'=>$this->article['author'],
+                'LOGO'=>$this->LOGO,
+                'isMarkdown'=>$this->article['isMarkdown'],
+                'imgData'=>$this->GetPostImg(),
+                'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
+                'desc'=>mb_substr(str_replace("\r\n", "", strip_tags($this->article['text'])), 0, 150) . "...",
+                'publisher'=>$this->publisher,
+                'AMPtext'=>$this->AMPInit($this->article['text'])
+            );
+            ob_start();  //TODO cache
+            require_once ('templates/AMPpage.php');
+            $cache = ob_get_contents();
+            $this->set($requestHash,$cache);
+        }
+    }
+
+    public function cleancache(){
+        $this->del('*');
+        print('Clean all cache!');
     }
     
     public function sendRealtime($contents, $class)
@@ -217,7 +241,13 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $article = Typecho_Widget::widget('AMP_Action')->getArticleByCid($class->cid);
         
         $urls = array($article['mipurl'],);
-        
+
+        $hash=array(//发布之前清除缓存
+            'mip'=>str_replace(Helper::options()->index,"",$article['mipurl']),
+            'amp'=>str_replace(Helper::options()->index,"",$article['ampurl'])
+        );
+        Typecho_Widget::widget('AMP_Action')->del($hash);
+
         try {
             //发送请求
             $http = Typecho_Http_Client::get();
@@ -488,6 +518,55 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         return $slugtemp;
     }
+
+    //For page_cacher
+
+    private function set($key, $cache){
+        $installDb = $this->db;
+        $time=(int)Helper::options()->plugin('AMP')->cacheTime;
+        $expire = $time*60*60;
+        if(is_array($cache)) $cache = json_encode($cache);
+        $table = $this->tablename;
+        $time = time();
+
+        $cache = addslashes($cache);
+        $sql = "REPLACE INTO $table  (`hash`,`cache`,`dateline`,`expire`) VALUES ('$key','$cache','$time','$expire')";
+        $installDb->query($sql);
+
+    }
+
+    private function del($key){
+        $installDb = $this->db;
+        $tablename=$this->tablename;
+        if(is_array($key)){
+            foreach($key as $k=>$v){
+                $this->del($v);
+            }
+        }else{
+            if($key=='*'){
+                $installDb->query("DELETE FROM $tablename WHERE 1=1 ");
+            }else{
+                $delete = $installDb->delete($tablename)->where('hash = ?', $key)->limit(1);
+                $installDb->query($delete);
+            }
+        }
+    }
+
+    private function get($key){
+		$installDb = $this->db;
+        $tablename=$this->tablename;
+
+        $condition=$installDb->select('cache','dateline','expire')->from($tablename)->where('hash = ?', $key);
+
+        $row = $installDb->fetchRow($condition);
+        if(!$row) return;
+        if(time()-$row['dateline']>$row['expire']) $this->del($key);
+        $cache =  $row['cache'];
+        $arr = json_decode($cache,true);
+        return is_array($arr)?$arr:$cache;
+    }
+
+
 }
 
 ?>

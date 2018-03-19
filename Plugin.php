@@ -4,15 +4,14 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.5.6
+ * @version 0.5.7
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 class AMP_Plugin implements Typecho_Plugin_Interface
 {
-    private static $tableName = 'PageCache';
-    private static $version = '0.5.6';
+    private static $version = '0.5.7';
 
 	public static function activate()
 	{
@@ -26,6 +25,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 		Helper::addRoute('mip_map', '/mip/[target]', 'AMP_Action', 'MIPpage');
 		Helper::addRoute('amp_sitemap', '/amp_sitemap.xml', 'AMP_Action', 'ampsitemap');
 		Helper::addRoute('mip_sitemap', '/mip_sitemap.xml', 'AMP_Action', 'mipsitemap');
+		Helper::addRoute('clean_cache', '/clean_cache', 'AMP_Action', 'cleancache');
 		Helper::addPanel(1, 'AMP/Links.php', 'AMP/MIP自动提交', '自动提交', 'administrator');
 		$msg=self::install();
 		return $msg.'请进入设置填写接口调用地址';
@@ -41,6 +41,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         Helper::removeRoute('amp_sitemap');
         Helper::removeRoute('mip_map');
         Helper::removeRoute('mip_sitemap');
+        Helper::removeRoute('clean_cache');
         Helper::removePanel(1, 'AMP/Links.php');
 		$msg = self::uninstall();
 		return $msg . '插件卸载成功';
@@ -53,13 +54,10 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	
 	public static function config(Typecho_Widget_Helper_Form $form)
 	{
-		
-		$element = new Typecho_Widget_Helper_Form_Element_Text('defaultPIC', null, 'https://holmesian.org/usr/themes/Holmesian/images/holmesian.png', _t('默认图片地址'), '默认图片地址');
-		$form->addInput($element);
-		
-		$element = new Typecho_Widget_Helper_Form_Element_Text('LOGO', null, 'https://holmesian.org/usr/themes/Holmesian/images/holmesian.png', _t('默认LOGO地址'), '根据AMP的限制，尺寸最大不超过60*60');
-		$form->addInput($element);
-		
+
+        $element = new Typecho_Widget_Helper_Form_Element_Text('cacheTime', null, '24', _t('缓存时间'), '单位：小时<br> v0.5.7起启用页面缓存，此项为缓存过期时间。如果需要重建缓存，请点击 <a href="' . Helper::options()->index . '/clean_cache">删除所有缓存</a>');
+        $form->addInput($element);
+
 		$element = new Typecho_Widget_Helper_Form_Element_Text('baiduAPI', null, '', _t('MIP/AMP推送接口调用地址'), '请到http://ziyuan.baidu.com/mip/index获取接口调用地址。');
 		$form->addInput($element);
 		
@@ -83,6 +81,12 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 		
 		$element = new Typecho_Widget_Helper_Form_Element_Radio('OnlyForSpiders', array(0 => '不开启', 1 => '开启'), 0, _t('是否只允许Baidu和Google的爬虫访问MIP/AMP页面'), '选择启用则需要修改UA才能访问MIP/AMP页面');
 		$form->addInput($element);
+
+        $element = new Typecho_Widget_Helper_Form_Element_Text('defaultPIC', null, 'https://holmesian.org/usr/themes/Holmesian/images/holmesian.png', _t('默认图片地址'), '默认图片地址');
+        $form->addInput($element);
+
+        $element = new Typecho_Widget_Helper_Form_Element_Text('LOGO', null, 'https://holmesian.org/usr/themes/Holmesian/images/holmesian.png', _t('默认LOGO地址'), '根据AMP的限制，尺寸最大不超过60*60');
+        $form->addInput($element);
 		
 	}
 	
@@ -93,22 +97,22 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	
 	public static function install()
 	{
-//		$msg=self::DBsetup();   //TODO  Cache
-		$msg=self::call_me('install');
+		$msg=self::DBsetup();
+		$msg=$msg.self::call_me('install');
 		return $msg;
 	}
 	
 	public static function uninstall()
 	{
-        //TODO  Cache
-//        $installDb = Typecho_Db::get();
-//        $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . self::$tableName);
+        $installDb = Typecho_Db::get();
+        $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . 'PageCache');
+
         $msg=self::call_me('uninstall');
         return $msg;
 
 	}
 
-	public static function call_me($type){
+	public static function call_me($type){//远程通知
 
         $api="https://holmesian.org/m/?action={$type}";
         try
@@ -134,32 +138,32 @@ class AMP_Plugin implements Typecho_Plugin_Interface
     }
 
 
-    //TODO  Cache
-//	public static function DBsetup()
-//    {
-//        $installDb = Typecho_Db::get();
-//        $prefix = $installDb->getPrefix();
-//        $cacheTable = $prefix. self::$tableName;
-//        try {
-//            $installDb->query("CREATE TABLE `$cacheTable` (
-//                        `hash`      varchar(200)  NOT NULL,
-//                        `cache`   longtext      NOT NULL,
-//                        `dateline` int(10) NOT NULL DEFAULT '0',
-//                        `expire`  int(8) NOT NULL DEFAULT '0',
-//                        UNIQUE KEY `hash` (`hash`)
-//                        ) DEFAULT CHARSET=utf8");
-//            return('缓存表创建成功！');
-//        } catch (Typecho_Db_Exception $e) {
-//            $code = $e->getCode();
-//            if(('Mysql' == $type && 1050 == $code)) {
-//                $script = 'SELECT `hash`, `cache`, `dateline`, `expire` from `' . $cacheTable . '`';
-//                $installDb->query($script, Typecho_Db::READ);
-//                return '缓存表已存在！';
-//            } else {
-//                throw new Typecho_Plugin_Exception('缓存表建立失败：'.$code);
-//            }
-//        }
-//    }
+    //Cache databse
+	public static function DBsetup()
+    {
+        $installDb = Typecho_Db::get();
+        $prefix = $installDb->getPrefix();
+        $cacheTable = $prefix. 'PageCache';
+        try {
+            $installDb->query("CREATE TABLE `$cacheTable` (
+                        `hash`      varchar(200)  NOT NULL,
+                        `cache`   longtext      NOT NULL,
+                        `dateline` int(10) NOT NULL DEFAULT '0',
+                        `expire`  int(8) NOT NULL DEFAULT '0',
+                        UNIQUE KEY `hash` (`hash`)
+                        ) DEFAULT CHARSET=utf8");
+            return('缓存表创建成功！');
+        } catch (Typecho_Db_Exception $e) {
+            $code = $e->getCode();
+            if((1050 == $code)) {
+                $script = 'SELECT `hash`, `cache`, `dateline`, `expire` from `' . $cacheTable . '`';
+                $installDb->query($script, Typecho_Db::READ);
+                return '缓存表已存在！';
+            } else {
+                throw new Typecho_Plugin_Exception('缓存表建立失败：'.$code);
+            }
+        }
+    }
 
 	
 	

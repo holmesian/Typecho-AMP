@@ -6,8 +6,7 @@ date_default_timezone_set('PRC');
 
 
 if (isset($_GET['send'])) {
-
-    try {
+     try {
         $http = Typecho_Http_Client::get();
     } catch (Exception $e) {
         throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持 php-curl 扩展而且没有打开 allow_url_fopen 功能, 无法正常使用此功能'));
@@ -64,19 +63,6 @@ if (isset($_GET['send'])) {
     }
 
     if (count($urls) > 0) {
-
-//		$ch = curl_init();
-//		$curl_options = array(
-//			CURLOPT_URL => $api,
-//			CURLOPT_POST => true,
-//			CURLOPT_RETURNTRANSFER => true,
-//			CURLOPT_POSTFIELDS => implode("\n", $urls),
-//			CURLOPT_HTTPHEADER => array('Content-Type: text/plain'),
-//		);
-//		curl_setopt_array($ch, $curl_options);
-//        $result = curl_exec($ch);
-
-//        $http = Typecho_Http_Client::get();
         $http->setData(implode("\n", $urls));
         $http->setHeader('Content-Type', 'text/plain');
         $result = $http->send($api);
