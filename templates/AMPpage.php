@@ -54,6 +54,7 @@
                 href="<?php print($AMPpage['permalink']); ?>">完整版 »</a></p>
     <?php if(!$AMPpage['isMarkdown']){print('<p class="notice">因本文不是用Markdown格式的编辑器书写的，转换的页面可能不符合AMP标准。</p>');} ?>
 </article>
-
+<footer><div class="footer"><p>© 2018 <a data-type="mip" href="https://github.com/holmesian/Typecho-AMP">MIP for Typecho</a>
+            , Designed by  <a href="https://holmesian.org/" target="_blank">Holmesian</a>.</p></div></footer>
 </body>
 </html>
