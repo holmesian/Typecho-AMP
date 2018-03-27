@@ -69,6 +69,28 @@ AMP页面为 http(s)://xxx/amp/slug/
 MIP页面为 http(s)://xxx/mip/slug/
 
 
+
+
+---
+## 效果预览
+
+MIP内容页：
+
+![MIP内容页](https://raw.githubusercontent.com/holmesian/Typecho-AMP/dev/screencapture-holmesian-org-mip-AMP-for-Typecho-2018-03-27-10_10_37.png)
+
+
+AMP内容页：
+
+![AMP内容页](https://raw.githubusercontent.com/holmesian/Typecho-AMP/dev/screencapture-holmesian-org-amp-AMP-for-Typecho-2018-03-27-10_11_27.png)
+
+
+AMP首页：
+
+![AMP首页](https://raw.githubusercontent.com/holmesian/Typecho-AMP/dev/screencapture-holmesian-org-ampindex-2018-03-27-10_12_54.png)
+
+
+
+
   [1]: https://holmesian.org/typecho-upgrade-AMP
   [2]: http://ziyuan.baidu.com/mip/index
   [3]: https://www.ampproject.org/docs/reference/components/amp-list
