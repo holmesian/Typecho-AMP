@@ -62,5 +62,6 @@
 <script src="https://mipcache.bdstatic.com/static/v1/mip-nav-slidedown/mip-nav-slidedown.js"></script>
 <script src="https://mipcache.bdstatic.com/static/v1/mip-gototop/mip-gototop.js"></script>
 <script src="https://mipcache.bdstatic.com/static/v1/mip-fixed/mip-fixed.js"></script>
+<script src="https://mipcache.bdstatic.com/extensions/platform/v1/mip-cambrian/mip-cambrian.js"></script>
 </body>
 </html>
