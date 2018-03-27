@@ -4,14 +4,14 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.5.7
+ * @version 0.5.8
  * @link https://holmesian.org
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 class AMP_Plugin implements Typecho_Plugin_Interface
 {
-    private static $version = '0.5.7';
+    private static $version = '0.5.8';
 
 	public static function activate()
 	{
@@ -104,10 +104,12 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 	
 	public static function uninstall()
 	{
-        $installDb = Typecho_Db::get();
-        $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . 'PageCache');
+
 
         $msg=self::call_me('uninstall');
+
+        $installDb = Typecho_Db::get();
+        $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . 'PageCache');
         return $msg;
 
 	}
@@ -118,9 +120,6 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         try
         {
             $http = Typecho_Http_Client::get();
-//            $plist = Typecho_Widget::widget('Widget_Plugins_List')->stack;
-//            $ids = array_column($plist, 'title');
-//            $amp_number = array_search('AMP-MIP', $ids);
             $data = array(
                 'site' => Helper::options()->title,
                 'url' => Helper::options()->index,
