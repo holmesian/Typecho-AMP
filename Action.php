@@ -159,8 +159,6 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         if (Helper::options()->plugin('AMP')->ampIndex == 0) {
             header("Location: {$this->baseurl}");
         }
-
-        //TODO cache
         require_once ('templates/AMPindex.php');
     }
 
@@ -203,7 +201,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'publisher'=>$this->publisher,
                 'AMPtext'=>$this->AMPInit($this->article['text'])
             );
-            ob_start();  //TODO cache
+            ob_start();
             require_once ('templates/AMPpage.php');
             $cache = ob_get_contents();
             $this->set($requestHash,$cache);
@@ -211,6 +209,10 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     }
 
     public function cleancache(){
+        $user = Typecho_Widget::widget('Widget_User');
+        if(!$user->pass('administrator')){
+            die('未登录用户!');
+        }
         $this->del('*');
         print('Clean all cache!');
     }
@@ -242,22 +244,23 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         
         $urls = array($article['mipurl'],);
 
-        $hash=array(//发布之前清除缓存
-            'mip'=>str_replace(Helper::options()->index,"",$article['mipurl']),
-            'amp'=>str_replace(Helper::options()->index,"",$article['ampurl'])
+        $hash = array(//发布之前清除缓存
+            'mip' => str_replace(Helper::options()->index, "", $article['mipurl']),
+            'amp' => str_replace(Helper::options()->index, "", $article['ampurl'])
         );
         Typecho_Widget::widget('AMP_Action')->del($hash);
 
+        //发送请求
+        $http = Typecho_Http_Client::get();
+        $http->setData(implode("\n", $urls));
+        $http->setHeader('Content-Type', 'text/plain');
+
         try {
-            //发送请求
-            $http = Typecho_Http_Client::get();
-            $http->setData(implode("\n", $urls));
-            $http->setHeader('Content-Type', 'text/plain');
             $json = $http->send($api);
-            
-        } catch (Typecho_Exception $e) {
-            throw new Typecho_Plugin_Exception(_t('出现错误:' . $e->getMessage()));
+        } catch (Exception $e) {
+            throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持远程访问。<br>请关闭自动提交功能！<br><hr>出错信息：' . $e->getMessage()));
         }
+
     }
     
     public function getArticle($target)

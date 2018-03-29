@@ -4,13 +4,13 @@ include 'header.php';
 include 'menu.php';
 date_default_timezone_set('PRC');
 
+$user = Typecho_Widget::widget('Widget_User');
+if(!$user->pass('administrator')){
+    die('未登录用户!');
+}
 
 if (isset($_GET['send'])) {
-     try {
-        $http = Typecho_Http_Client::get();
-    } catch (Exception $e) {
-        throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持 php-curl 扩展而且没有打开 allow_url_fopen 功能, 无法正常使用此功能'));
-    }
+    $http = Typecho_Http_Client::get();
     $db = Typecho_Db::get();
 
     //URL分页
@@ -58,14 +58,22 @@ if (isset($_GET['send'])) {
 //    var_dump(isset($api));
     $urls = array();
     foreach ($articleList AS $article) {
+        if(Helper::options()->plugin('AMP')->PostURL !== Helper::options()->index){
+            $article['permalink']=str_replace(Helper::options()->index,Helper::options()->plugin('AMP')->PostURL,$article['permalink']);//替换提交的前缀
+        }
         echo '正在提交:' . $article['permalink'] . " <br>";
         $urls[] = $article['permalink'];
     }
 
+
     if (count($urls) > 0) {
         $http->setData(implode("\n", $urls));
         $http->setHeader('Content-Type', 'text/plain');
-        $result = $http->send($api);
+        try {
+            $result = $http->send($api);
+        } catch (Exception $e) {
+            throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持远程访问。<br>请检查 curl 扩展、allow_url_fopen和防火墙设置！<br><hr>出错信息：'.$e->getMessage()));
+        }
 
 //    string '{"remain":4999960,"success":0,"not_valid":[""]}'
 //    string '{"success_mip":20,"remain_mip":9980}' (length=36)
