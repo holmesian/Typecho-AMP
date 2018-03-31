@@ -83,22 +83,23 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     {
         $requestHash = $this->request->getPathinfo();
         $context=$this->get($requestHash); //查找是否已经缓存
+        $this->article = $this->getArticle($this->request->target);
+
+        if (isset($this->article['isblank'])) {
+            throw new Typecho_Widget_Exception('不存在或已删除');
+        }
+        if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){//判断是否是对应的爬虫来访
+            $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
+            $spider = strtolower('Baiduspider');
+            if (strpos($userAgent, $spider) == false) {//不是百度的蜘蛛
+                header("Location: {$this->article['permalink']}");
+            }
+        }
+
 
         if(!is_null($context)){//有缓存的情况直接输出
             print($context);
         }else{//没缓存的生成页面再进行缓存
-            $this->article = $this->getArticle($this->request->target);
-
-            if (isset($this->article['isblank'])) {
-                throw new Typecho_Widget_Exception('不存在或已删除');
-            }
-            if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){//判断是否是对应的爬虫来访
-                $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
-                $spider = strtolower('Baiduspider');
-                if (strpos($userAgent, $spider) == false) {//不是百度的蜘蛛
-                    header("Location: {$this->article['permalink']}");
-                }
-            }
             $MIPpage=array(
                 'title'=>$this->article['title'],
                 'permalink'=>$this->article['permalink'],
@@ -112,10 +113,9 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'publisher'=>$this->publisher,
                 'MIPtext'=>$this->MIPInit($this->article['text'])
             );
-            ob_start();  //TODO cache
+            ob_start();
             require_once('templates/MIPpage.php');
             $cache = ob_get_contents();
-//        ob_end_clean();
             $this->set($requestHash,$cache);
         }
     }
@@ -168,24 +168,23 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $requestHash = $this->request->getPathinfo();
         $context=$this->get($requestHash); //查找是否已经缓存
 
+        $this->article = $this->getArticle($this->request->target);
+        if (isset($this->article['isblank'])) {
+            throw new Typecho_Widget_Exception('不存在或已删除');
+        }
+        if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){//判断是否是对应的爬虫来访
+            $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
+            $spider = strtolower('Googlebot');
+            $spider2 = strtolower('google-amphtml');
+            if (strpos($userAgent, $spider) == false  or strpos($userAgent, $spider2) == false) {//不是Google的蜘蛛
+                header("Location: {$this->article['permalink']}");
+            }
+        }
+
         if(!is_null($context)){//有缓存的情况直接输出
             print($context);
         }
         else{
-            $this->article = $this->getArticle($this->request->target);
-
-            if (isset($this->article['isblank'])) {
-                throw new Typecho_Widget_Exception('不存在或已删除');
-            }
-            if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1){//判断是否是对应的爬虫来访
-                $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
-                $spider = strtolower('Googlebot');
-                $spider2 = strtolower('google-amphtml');
-                if (strpos($userAgent, $spider) == false  or strpos($userAgent, $spider2) == false) {//不是Google的蜘蛛
-                    header("Location: {$this->article['permalink']}");
-                }
-            }
-
             $AMPpage=array(
                 'title'=>$this->article['title'],
                 'permalink'=>$this->article['permalink'],
