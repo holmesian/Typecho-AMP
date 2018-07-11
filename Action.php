@@ -236,7 +236,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         $appid = $options->plugin('AMP')->baiduAPPID;
         $token = $options->plugin('AMP')->baiduTOKEN;
-        $api = "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=realtime,original";
+        $api = "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=realtime";
         
         $article = Typecho_Widget::widget('AMP_Action')->getArticleByCid($class->cid);
         
