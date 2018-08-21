@@ -2,7 +2,6 @@
 
 class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 {
-    private $version = '0.6.7';
 
     public function action()
     {
@@ -13,14 +12,13 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     {
         parent::__construct($request, $response, $params);
         $this->LOGO = Helper::options()->plugin('AMP')->LOGO;
-        $this->defaultPIC = Helper::options()->plugin('AMP')->defaultPIC;
         $this->publisher = Helper::options()->title;
         $this->db = Typecho_Db::get();
         $this->tablename = $this->db->getPrefix().'PageCache';
         $this->baseurl = Helper::options()->index;
         $this->baseurl = str_replace("https://", "//", $this->baseurl);
         $this->baseurl = str_replace("http://", "//", $this->baseurl);
-
+        $this->version = AMP_Plugin::$version;
     }
 
 
@@ -420,28 +418,32 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 preg_match("/(?:\()(.*)(?:\))/i", $img[0], $result);
                 $img_url = $img[1];
             }else{//附件里再找不到就调LOGO了
-                $img_url = $this->defaultPIC;
+//                $img_url = $this->defaultPIC;
+                $img_url=null;//熊掌号修改了规则，如果图不对文的话会被惩罚，所以没有图片则不出图
             }
         }
 
-        try {
-            list($width, $height, $type, $attr) = @getimagesize($img_url);
-            $imgData=array(
-                'url'=>$img_url,
-                'width'=>$width,
-                'height'=>$height,
-            );
-            return $imgData;
-        }
-        catch (Exception $e){
-            $width = '700';
-            $height = '400';
-            $imgData=array(
-                'url'=>$img_url,
-                'width'=>$width,
-                'height'=>$height,
-            );
-            return $imgData;
+        if(is_null($img_url)){//如果没有找到图片则返回空
+            return null;
+        } else {//如果找到文章图片则返回图片数组
+            try {//尝试获取图片尺寸
+                list($width, $height, $type, $attr) = @getimagesize($img_url);
+                $imgData = array(
+                    'url' => $img_url,
+                    'width' => $width,
+                    'height' => $height,
+                );
+                return $imgData;
+            } catch (Exception $e) {//获取不到则使用默认尺寸
+                $width = '700';
+                $height = '400';
+                $imgData = array(
+                    'url' => $img_url,
+                    'width' => $width,
+                    'height' => $height,
+                );
+                return $imgData;
+            }
         }
     }
 
