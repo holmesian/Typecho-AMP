@@ -17,15 +17,13 @@
           "name": "<?php echo($AMPpage['author']); ?>"
         },
         "datePublished": "<?php echo($AMPpage['date']); ?>",
-        "dateModified": "<?php echo($AMPpage['modified']); ?>",<?php if(is_array($AMPpage['imgData'])){ ?>
-
+        "dateModified": "<?php echo($AMPpage['modified']); ?>",
         "image": {
           "@type": "ImageObject",
           "url": "<?php echo($AMPpage['imgData']['url']); ?>",
           "width": "<?php echo($AMPpage['imgData']['width']); ?>",
           "height": "<?php echo($AMPpage['imgData']['height']); ?>"
-        },<?php  } ?>
-
+        },
         "publisher": {
           "@type": "Organization",
           "name": "<?php echo($AMPpage['publisher']); ?>",

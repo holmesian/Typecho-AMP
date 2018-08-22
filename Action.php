@@ -11,14 +11,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     public function __construct($request, $response, $params = NULL)
     {
         parent::__construct($request, $response, $params);
-        $this->LOGO = Helper::options()->plugin('AMP')->LOGO;
-        $this->publisher = Helper::options()->title;
+        $this->LOGO = Helper::options()->plugin('AMP')->LOGO;//同时为默认图片
         $this->db = Typecho_Db::get();
         $this->tablename = $this->db->getPrefix().'PageCache';
         $this->baseurl = Helper::options()->index;
         $this->baseurl = str_replace("https://", "//", $this->baseurl);
         $this->baseurl = str_replace("http://", "//", $this->baseurl);
-        $this->version = AMP_Plugin::$version;
     }
 
 
@@ -106,11 +104,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'modified'=>date('Y-m-d\TH:i:s',$this->article['modified']),
                 'date'=>$this->article['date']->format('Y-m-d\TH:i:s'),
                 'isMarkdown'=>$this->article['isMarkdown'],
-                'imgData'=>$this->GetPostImg(),
+                'imgData'=>$this->GetPostImg(),//MIP页面的结果化数据可以没有图片
                 'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
                 'mip_stats_token'=>Helper::options()->plugin('AMP')->mip_stats_token,
-                'desc'=>$this->cleanUp($this->article['text']),
-                'publisher'=>$this->publisher,
+                'desc'=>self::cleanUp($this->article['text']),
+                'publisher'=>Helper::options()->title,
                 'MIPtext'=>$this->MIPInit($this->article['text']),
                 'version'=>$this->version
             );
@@ -197,11 +195,15 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'isMarkdown'=>$this->article['isMarkdown'],
                 'imgData'=>$this->GetPostImg(),
                 'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
-                'desc'=>$this->cleanUp($this->article['text']),
-                'publisher'=>$this->publisher,
+                'desc'=>self::cleanUp($this->article['text']),
+                'publisher'=>Helper::options()->title,
                 'AMPtext'=>$this->AMPInit($this->article['text']),
                 'version'=>$this->version
             );
+            //MIP页面的结果化数据必须有图片
+            if(!is_array($AMPpage['imgData'])){
+                $AMPpage['imgData']=self::getSizeArr($AMPpage['LOGO']);//如果找不到图片就用LOGO
+            }
             ob_start();
             require_once ('templates/AMPpage.php');
             $cache = ob_get_contents();
@@ -426,24 +428,28 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         if(is_null($img_url)){//如果没有找到图片则返回空
             return null;
         } else {//如果找到文章图片则返回图片数组
-            try {//尝试获取图片尺寸
-                list($width, $height, $type, $attr) = @getimagesize($img_url);
-                $imgData = array(
-                    'url' => $img_url,
-                    'width' => $width,
-                    'height' => $height,
-                );
-                return $imgData;
-            } catch (Exception $e) {//获取不到则使用默认尺寸
-                $width = '700';
-                $height = '400';
-                $imgData = array(
-                    'url' => $img_url,
-                    'width' => $width,
-                    'height' => $height,
-                );
-                return $imgData;
-            }
+            return self::getSizeArr($img_url);
+        }
+    }
+
+    private static function getSizeArr($img_url){
+        try {//尝试获取图片尺寸
+            list($width, $height, $type, $attr) = @getimagesize($img_url);
+            $imgData = array(
+                'url' => $img_url,
+                'width' => $width,
+                'height' => $height,
+            );
+            return $imgData;
+        } catch (Exception $e) {//出问题 或 获取不到则使用默认尺寸
+            $width = '700';
+            $height = '400';
+            $imgData = array(
+                'url' => $img_url,
+                'width' => $width,
+                'height' => $height,
+            );
+            return $imgData;
         }
     }
 
@@ -624,7 +630,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
     }
 
-    private function cleanUp($desc){
+    private static function cleanUp($desc){
         $desc= str_replace(array("/r/n", "/r", "/n"), "", strip_tags($desc));
         $desc = str_replace(PHP_EOL, '', $desc);
         $desc=mb_substr($desc, 0, 150).'...';
