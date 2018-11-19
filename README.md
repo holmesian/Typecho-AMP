@@ -9,6 +9,11 @@
 
 点击下载[最新版][2]
 
+如果本插件帮到了你，不妨给点赞赏鼓励一下作者 ^-^
+
+![Alipay](https://raw.githubusercontent.com/holmesian/Typecho-AMP/dev/alipay.jpg)![Wechat](https://raw.githubusercontent.com/holmesian/Typecho-AMP/dev/wechat.jpg)
+
+
 ---
 ## 功能
 
