@@ -202,9 +202,9 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'AMPtext'=>$this->AMPInit($this->article['text']),
                 'version'=>$this->version
             );
-            //MIP页面的结果化数据必须有图片
+            //AMP页面的结果化数据必须有图片
             if(!is_array($AMPpage['imgData'])){
-                $AMPpage['imgData']=self::getSizeArr($AMPpage['LOGO'],'200','200');//如果找不到图片就用LOGO
+                $AMPpage['imgData']=self::getSizeArr($AMPpage['LOGO'],'1200','1200');//如果找不到图片就用LOGO
             }
             ob_start();
             require_once ('templates/AMPpage.php');
@@ -503,15 +503,16 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 }
                 list($width, $height, $type, $attr) = @getimagesize($url);
                 if (!isset($width)) {
-                    $width = '500';
+                    $width = '1200';
                 }
                 if (!isset($height)) {
-                    $height = '700';
+                    $height = '800';
                 }
                 return "<img width=\"{$width}\" height=\"{$height}\" src=\"{$m[1]}\"";
             },
             $html
         );
+
         return $html;
     }
 
