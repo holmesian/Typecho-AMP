@@ -69,6 +69,7 @@ if (isset($_GET['send'])) {
         $http->setData(implode("\n", $urls));
         $http->setHeader('Content-Type', 'text/plain');
         try {
+            $api = trim($api); //经过单步调试，发现api这个字符串前面多了一个空格，导致parse_url无法解析正确的`host`
             $result = $http->send($api);
         } catch (Exception $e) {
             throw new Typecho_Plugin_Exception(_t('对不起, 您的主机不支持远程访问。<br>请检查 curl 扩展、allow_url_fopen和防火墙设置！<br><hr>出错信息：'.$e->getMessage()));
