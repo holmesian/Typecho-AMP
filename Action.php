@@ -109,7 +109,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'isMarkdown'=>$this->article['isMarkdown'],
                 'imgData'=>$this->GetPostImg(),//MIP页面的结果化数据可以没有图片
                 'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
-                'mip_stats_token'=>Helper::options()->plugin('AMP')->mip_stats_token,
+                'mip_stats_token'=> trim(Helper::options()->plugin('AMP')->mip_stats_token),
                 'desc'=>self::cleanUp($this->article['text']),
                 'publisher'=>Helper::options()->title,
                 'MIPtext'=>$this->MIPInit($this->article['text']),
@@ -241,8 +241,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         if (is_null($options->plugin('AMP')->baiduAPPID) or is_null($options->plugin('AMP')->baiduTOKEN)) {
             throw new Typecho_Plugin_Exception(_t('参数未正确配置，自动提交失败'));
         }else{
-            $appid = $options->plugin('AMP')->baiduAPPID;
-            $token = $options->plugin('AMP')->baiduTOKEN;
+            $appid = trim($options->plugin('AMP')->baiduAPPID);//过滤空格
+            $token = trim($options->plugin('AMP')->baiduTOKEN);//过滤空格
             $api = "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=realtime";//构建实时提交的地址
         }
 

@@ -30,8 +30,8 @@ if (isset($_GET['send'])) {
         $sendtype = 'mip';
         $type = 'batch';
         if (isset(Helper::options()->plugin('AMP')->baiduAPPID) and isset(Helper::options()->plugin('AMP')->baiduTOKEN)) {
-            $appid = Helper::options()->plugin('AMP')->baiduAPPID;
-            $token = Helper::options()->plugin('AMP')->baiduTOKEN;
+            $appid = trim(Helper::options()->plugin('AMP')->baiduAPPID);//过滤空格
+            $token = trim(Helper::options()->plugin('AMP')->baiduTOKEN);//过滤空格
             $api = "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=batch";
         } else {
             throw new Typecho_Widget_Exception('未设置熊掌号参数！');
@@ -49,7 +49,7 @@ if (isset($_GET['send'])) {
         if (empty(Helper::options()->plugin('AMP')->baiduAPI)) {
             throw new Typecho_Widget_Exception('未设置MIP/AMP推送接口调用地址!');
         } else {
-            $api = Helper::options()->plugin('AMP')->baiduAPI;
+            $api = trim(Helper::options()->plugin('AMP')->baiduAPI); //过滤空格
             $api = preg_replace("/&type=[a-z]+/", "&type={$sendtype}", $api);//替换接口中的类型
 
         }
