@@ -61,7 +61,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     {
 
         if (Helper::options()->plugin('AMP')->AMPsitemap == 0) {
-            throw new Typecho_Widget_Exception('未开启AMPsitemap功能！');
+            throw new Typecho_Widget_Exception('未开启 AMP SiteMap 功能！');
         }
 
         $this->MakeSiteMap('amp');
@@ -73,7 +73,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     {
 
         if (Helper::options()->plugin('AMP')->MIPsitemap == 0) {
-            throw new Typecho_Widget_Exception('未开启MIPsitemap功能！');
+            throw new Typecho_Widget_Exception('未开启 MIP SiteMap 功能！');
         }
 
         $this->MakeSiteMap('mip');
