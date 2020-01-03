@@ -65,10 +65,10 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         $element = new Typecho_Widget_Helper_Form_Element_Text('baiduAPPID', null, '', _t('熊掌号识别 ID'), '打开页面后 <a href="https://ziyuan.baidu.com/xzh/commit/method">点击 我的功能->资源提交 根据接口调用地址</a> 获取 APPID');
         $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Text('baiduTOKEN', null, '', _t('熊掌号准入密钥'), '打开页面后 <a href="https://ziyuan.baidu.com/xzh/commit/method">点击 我的功能->资源提交 根据接口调用地址</a> 获取 Token');
+        $element = new Typecho_Widget_Helper_Form_Element_Text('baiduToken', null, '', _t('熊掌号准入密钥'), '打开页面后 <a href="https://ziyuan.baidu.com/xzh/commit/method">点击 我的功能->资源提交 根据接口调用地址</a> 获取 Token');
         $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Text('mip_stats_token', null, '', _t('百度统计 Token'), '点击了解 <a href="https://www.mipengine.org/examples/mip-extensions/mip-stats-baidu.html">如何获取百度统计 Token</a>');
+        $element = new Typecho_Widget_Helper_Form_Element_Text('mipStatsToken', null, '', _t('百度统计 Token'), '点击了解 <a href="https://www.mipengine.org/examples/mip-extensions/mip-stats-baidu.html">如何获取百度统计 Token</a>');
         $form->addInput($element);
 
         $element = new Typecho_Widget_Helper_Form_Element_Radio('AMPsitemap', array(0 => '关闭', 1 => '开启'), 1, _t('是否开启 AMP 站点地图'), 'AMP SiteMap 地址：<a href="'.Helper::options()->index .'/amp_sitemap.xml">' . Helper::options()->index . '/amp_sitemap.xml</a>');
@@ -116,7 +116,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
             $msg = $msg . self::call_me('uninstall').'|';
             return $msg;
         } catch (Exception $e) {
-            $msg = '卸载出错!';
+            $msg = '卸载出错！';
             return $msg;
         }
     }
@@ -138,7 +138,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
             return $msg;
         }
         catch (Exception $e){
-            $msg='通知出错!';
+            $msg='通知出错！';
             return $msg;
         }
     }
@@ -150,7 +150,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 
         $installDb = Typecho_Db::get();
         if(stristr($installDb->getAdapterName(),'mysql')== false){
-            return('缓存暂不支持 MySQL 以外的数据库.');
+            return('缓存暂不支持 MySQL/MariaDB 以外的数据库.');
         }
         $cacheTable =  $installDb->getPrefix() . 'PageCache';
         try {
