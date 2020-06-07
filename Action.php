@@ -132,7 +132,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'date'=>$this->article['date']->format('Y-m-d\TH:i:s'),
                 'isMarkdown'=>$this->article['isMarkdown'],
                 'imgData'=>$this->GetPostImg(),//MIP页面的结果化数据可以没有图片
-                'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
+                'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,//熊掌号的APPID
                 'mip_stats_token'=> trim(Helper::options()->plugin('AMP')->mip_stats_token),
                 'desc'=>self::cleanUp($this->article['text']),
                 'publisher'=>Helper::options()->title,
@@ -234,7 +234,6 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'LOGO'=>$this->LOGO,
                 'isMarkdown'=>$this->article['isMarkdown'],
                 'imgData'=>$this->GetPostImg(),
-                'APPID'=>Helper::options()->plugin('AMP')->baiduAPPID,
                 'desc'=>self::cleanUp($this->article['text']),
                 'publisher'=>Helper::options()->title,
                 'AMPtext'=>$this->AMPInit($this->article['text']),
@@ -286,21 +285,27 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
 
         //如果没有开启自动提交功能 则不推送
-        if ($options->plugin('AMP')->mipAutoSubmit == 0) {
+        $mipAutoSubmit=$options->plugin('AMP')->mipAutoSubmit;
+        if ( $mipAutoSubmit == 0) {
             return;
         }
 
         //判断是否配置相关信息
-        if (is_null($options->plugin('AMP')->baiduAPPID) or is_null($options->plugin('AMP')->baiduTOKEN)) {
-            throw new Typecho_Plugin_Exception(_t('参数未正确配置，自动提交失败'));
+//        if (is_null($options->plugin('AMP')->baiduAPPID) or is_null($options->plugin('AMP')->baiduTOKEN)) {
+        if (is_null($options->plugin('AMP')->baiduAPI)){
+            throw new Typecho_Plugin_Exception(_t('未配置 快速收录接口地址，自动提交失败'));
         }else{
-            $appid = trim($options->plugin('AMP')->baiduAPPID);//过滤空格
-            $token = trim($options->plugin('AMP')->baiduTOKEN);//过滤空格
-            $api = "http://data.zz.baidu.com/urls?appid={$appid}&token={$token}&type=realtime";//构建实时提交的地址
+//            $appid = trim($options->plugin('AMP')->baiduAPPID);//过滤空格
+//            $token = trim($options->plugin('AMP')->baiduTOKEN);//过滤空格
+            //熊掌号下线后，修改未快速收录接口   2020.06.07
+
+            $api = trim($options->plugin('AMP')->baiduAPI);//默认填写的是快速收录地址
+            if ($mipAutoSubmit ==2 ){//如果选择了普通收录地址，则进行替换
+                $api = preg_replace("/&type=[a-z]+/", "", $api);//将快速收录接口换成普通收录接口
+            }
         }
 
         $article = Typecho_Widget::widget('AMP_Action')->getArticleByCid($class->cid);//根据cid获取文章内容
-
 
         if((int)$article['created']+86400 < (int)$article['modified'] ){//之前判断忽略了自动保存草稿的问题
             return;//草稿在一天之内的文章推送，否则不推送。
@@ -323,6 +328,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
 
         try {
+
 
             $result = $http->send($api);
 

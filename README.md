@@ -12,6 +12,10 @@ A Typecho plugin for Google AMP / Baidu MIP
 
 点击下载[最新版][2]
 
+2020.07.06 去除已下线的熊掌号相关功能，将自动提交和批量提交功能修改为 提交到快速收录接口和普通收录接口。 版本更新为0.7.6。
+
+
+
 ------
 
 ## 支持
@@ -33,7 +37,7 @@ A Typecho plugin for Google AMP / Baidu MIP
  
 - 后台批量提交 URL 到百度站长平台，可选手动或自动。
 
-- MIP 页面完美支持百度熊掌号页面标准，新发表文章自动提交到熊掌号。
+- MIP 页面完美支持百度熊掌号页面标准，~~新发表文章自动提交到熊掌号~~。
 
 - （新增）用户决定是否只允许百度和谷歌的爬虫访问 MIP/AMP 页面。
 
@@ -65,9 +69,9 @@ A Typecho plugin for Google AMP / Baidu MIP
 
 ## 使用说明
 
-- 在插件后台设置默认 LOGO 以及选择是否开启 SiteMap、AMP 首页、自动提交到熊掌号等功能（除自动提交到熊掌号外的功能都默认开启）。
+- 在插件后台设置默认 LOGO 以及选择是否开启 SiteMap、AMP 首页、~~自动提交到熊掌号等功能（除自动提交到熊掌号外的功能都默认开启）~~。
 
-- 从[百度站长][3]获取接口调用地址、熊掌号 APPID/TOKEN，填写到插件设置中（使用提交 URL功能时需要）。
+- 从[百度站长][3]获取接口调用地址、~~熊掌号 APPID/TOKEN~~，填写到插件设置中（使用提交 URL功能时需要）。
 
 - AMP/MIP 的页面缓存默认关闭，可在插件设置页面修改缓存时间。修改文章会自动更新页面缓存，重建缓存开关在插件设置页，设置缓存时间的下方。
 
@@ -109,5 +113,5 @@ AMP首页：
 
   [1]: https://holmesian.org/typecho-upgrade-AMP
   [2]: https://github.com/typecho-fans/plugins/releases/download/plugins-A_to_C/AMP.zip
-  [3]: http://ziyuan.baidu.com/mip/index
+  [3]: https://ziyuan.baidu.com/dailysubmit/index
   [4]: https://www.ampproject.org/docs/reference/components/amp-list
