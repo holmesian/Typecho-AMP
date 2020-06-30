@@ -4,6 +4,11 @@ include 'header.php';
 include 'menu.php';
 date_default_timezone_set('PRC');
 
+Typecho_Widget::widget('Widget_Notice')->set(_t('已经将本文推送到百度'), 'success');
+
+
+
+
 $user = Typecho_Widget::widget('Widget_User');
 if (!$user->pass('administrator')) {
     die('未登录用户!');
