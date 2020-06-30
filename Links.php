@@ -4,7 +4,7 @@ include 'header.php';
 include 'menu.php';
 date_default_timezone_set('PRC');
 
-Typecho_Widget::widget('Widget_Notice')->set(_t('已经将本文推送到百度'), 'success');
+Typecho_Widget::widget('Widget_Notice')->set(_t('熊掌号已经下线'), 'success');
 
 
 
