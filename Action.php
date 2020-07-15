@@ -68,11 +68,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
      * date: 2020/3/13 11:45
      * 生成 AMP sitemap
      */
-    public function AMPsitemap()
+    public function AMPSitemap()
     {
 
-        if (Helper::options()->plugin('AMP')->AMPsitemap == 0) {
-            throw new Typecho_Widget_Exception('未开启AMPsitemap功能！');
+        if (Helper::options()->plugin('AMP')->AMPSitemap == 0) {
+            throw new Typecho_Widget_Exception('未开启 AMPSitemap 功能！');
         }
 
         $this->MakeSiteMap('amp');
@@ -86,11 +86,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
      * date: 2020/3/13 11:45
      * 生成 MIP sitemap
      */
-    public function MIPsitemap()
+    public function MIPSitemap()
     {
 
-        if (Helper::options()->plugin('AMP')->MIPsitemap == 0) {
-            throw new Typecho_Widget_Exception('未开启MIPsitemap功能！');
+        if (Helper::options()->plugin('AMP')->MIPSitemap == 0) {
+            throw new Typecho_Widget_Exception('未开启 MIPSitemap 功能！');
         }
 
         $this->MakeSiteMap('mip');
@@ -113,7 +113,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         if (isset($this->article['isblank'])) {
             throw new Typecho_Widget_Exception("不存在或已删除。<a href='{$this->baseurl}'>返回首页</a>");
         }
-        if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1) {//判断是否是对应的爬虫来访
+        if (Helper::options()->plugin('AMP')->onlyForSpiders == 1) {//判断是否是对应的爬虫来访
             $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
             $spider = strtolower('Baiduspider');
             if (strpos($userAgent, $spider) == false) {//不是百度的蜘蛛
@@ -133,7 +133,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'isMarkdown' => $this->article['isMarkdown'],
                 'imgData' => $this->GetPostImg(),//MIP页面的结果化数据可以没有图片
                 'APPID' => Helper::options()->plugin('AMP')->baiduAPPID,//熊掌号的APPID
-                'mip_stats_token' => trim(Helper::options()->plugin('AMP')->mip_stats_token),
+                'mipStatsToken' => trim(Helper::options()->plugin('AMP')->mipStatsToken),
                 'desc' => self::cleanUp($this->article['text']),
                 'publisher' => Helper::options()->title,
                 'MIPtext' => $this->MIPInit($this->article['text']),
@@ -212,7 +212,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         if (isset($this->article['isblank'])) {
             throw new Typecho_Widget_Exception('不存在或已删除');
         }
-        if (Helper::options()->plugin('AMP')->OnlyForSpiders == 1) {//判断是否是对应的爬虫来访
+        if (Helper::options()->plugin('AMP')->onlyForSpiders == 1) {//判断是否是对应的爬虫来访
             $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
             $spider = strtolower('Googlebot');
             $spider2 = strtolower('google-amphtml');
