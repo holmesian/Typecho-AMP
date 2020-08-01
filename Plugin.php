@@ -25,8 +25,8 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         Helper::addRoute('amp_map', '/amp/[target]', 'AMP_Action', 'AMPpage');
         Helper::addRoute('amp_list', '/amp/list/[list_id]', 'AMP_Action', 'AMPlist');
         Helper::addRoute('mip_map', '/mip/[target]', 'AMP_Action', 'MIPpage');
-        Helper::addRoute('amp_sitemap', '/amp_sitemap.xml', 'AMP_Action', 'AMPsitemap');
-        Helper::addRoute('mip_sitemap', '/mip_sitemap.xml', 'AMP_Action', 'MIPsitemap');
+        Helper::addRoute('amp_sitemap', '/amp_sitemap.xml', 'AMP_Action', 'AMPSitemap');
+        Helper::addRoute('mip_sitemap', '/mip_sitemap.xml', 'AMP_Action', 'MIPSitemap');
         Helper::addRoute('clean_cache', '/clean_cache', 'AMP_Action', 'cleancache');
         Helper::addPanel(1, 'AMP/Links.php', '推送AMP/MIP到百度', '提交到百度', 'administrator');
 
@@ -70,28 +70,28 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         $element = new Typecho_Widget_Helper_Form_Element_Radio('mipAutoSubmit', array(0 => '不开启', 1 => '提交到快速收录',2=>'提交到普通收录'), 0, _t('新文章自动提交'), '请填写 快速收录接口地址 再开启 <br>说明：如果文章属性为 隐藏 或 定时发布 或 编辑 则不推送，新文章 和 草稿在一天之内发表的文章会自动推送');
         $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Text('mip_stats_token', null, '', _t('百度统计token'), '<a href="https://www.mipengine.org/examples/mip-extensions/mip-stats-baidu.html">点击了解如何获取 TOKEN</a>');
+        $element = new Typecho_Widget_Helper_Form_Element_Text('mipStatsToken', null, '', _t('百度统计 Token'), '点击了解 <a href="https://www.mipengine.org/examples/mip-extensions/mip-stats-baidu.html">如何获取 Token</a>');
         $form->addInput($element);
 
 
-        $element = new Typecho_Widget_Helper_Form_Element_Radio('OnlyForSpiders', array(0 => '不开启', 1 => '开启'), 0, _t('是否只允许百度和谷歌的爬虫访问 AMP/MIP 页面'), '启用后需要伪造 UA 才能访问 AMP/MIP 页面');
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('onlyForSpiders', array(0 => '关闭', 1 => '开启'), 0, _t('是否只允许百度和谷歌的爬虫访问 AMP/MIP 页面'), '启用后需要伪造 UA 才能访问 AMP/MIP 页面');
         $form->addInput($element);
 
 
-        $element = new Typecho_Widget_Helper_Form_Element_Radio('AMPsitemap', array(0 => '不开启', 1 => '开启'), 1, _t('开启 AMP 的 SiteMap'), 'AMP SiteMap 地址：<a href="'.Helper::options()->index .'/amp_sitemap.xml">' . Helper::options()->index . '/amp_sitemap.xml</a>');
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('AMPSitemap', array(0 => '关闭', 1 => '开启'), 1, _t('开启 AMP 的 SiteMap'), 'AMP SiteMap 地址：<a href="'.Helper::options()->index .'/amp_sitemap.xml">' . Helper::options()->index . '/amp_sitemap.xml</a>');
         $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Radio('MIPsitemap', array(0 => '不开启', 1 => '开启'), 1, _t('开启 MIP 的 SiteMap'), 'MIP SiteMap 地址：<a href="'.Helper::options()->index .'/mip_sitemap.xml">'. Helper::options()->index . '/mip_sitemap.xml</a>');
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('MIPSitemap', array(0 => '关闭', 1 => '开启'), 1, _t('开启 MIP 的 SiteMap'), 'MIP SiteMap 地址：<a href="'.Helper::options()->index .'/mip_sitemap.xml">'. Helper::options()->index . '/mip_sitemap.xml</a>');
         $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Radio('ampIndex', array(0 => '不开启', 1 => '开启'), 1, _t('开启 AMP 版的首页'), 'AMP Index 地址：<a href="'.Helper::options()->index.'/ampindex">' . Helper::options()->index . '/ampindex</a> <br> 受 AMP-LIST 控件限制，<b>非 HTTPS 站点</b>请勿开启 AMP 版首页');
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('ampIndex', array(0 => '关闭', 1 => '开启'), 1, _t('开启 AMP 版的首页'), 'AMP Index 地址：<a href="'.Helper::options()->index.'/ampindex">' . Helper::options()->index . '/ampindex</a> <br> 受 AMP-LIST 控件限制，<b>非 HTTPS 站点</b>请勿开启 AMP 版首页');
         $form->addInput($element);
 
 
         $element = new Typecho_Widget_Helper_Form_Element_Text('LOGO', null, 'https://holmesian.org/usr/themes/Holmesian/images/holmesian.png', _t('默认 LOGO 地址'), '根据 AMP 的限制，尺寸不超过 60*60');
         $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Text('PostURL', null, Helper::options()->index , _t('替换自动提交的前缀地址'), '作用看<a href="https://holmesian.org/AMP-for-Typecho#comment-7404">这里</a>，无需求勿动');
+        $element = new Typecho_Widget_Helper_Form_Element_Text('postURL', null, Helper::options()->index , _t('替换自动提交的前缀地址'), '作用看<a href="https://holmesian.org/AMP-for-Typecho#comment-7404">这里</a>，无需求勿动');
         $form->addInput($element);
 
 
