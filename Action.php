@@ -132,7 +132,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 'date' => $this->article['date']->format('Y-m-d\TH:i:s'),
                 'isMarkdown' => $this->article['isMarkdown'],
                 'imgData' => $this->GetPostImg(),//MIP页面的结果化数据可以没有图片
-                'APPID' => Helper::options()->plugin('AMP')->baiduAPPID,//熊掌号的APPID
+//                'APPID' => Helper::options()->plugin('AMP')->baiduAPPID,//熊掌号的APPID
                 'mipStatsToken' => trim(Helper::options()->plugin('AMP')->mipStatsToken),
                 'desc' => self::cleanUp($this->article['text']),
                 'publisher' => Helper::options()->title,
