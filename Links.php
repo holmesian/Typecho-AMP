@@ -66,8 +66,8 @@ if (isset($_GET['send'])) {
     $urls = array();
     $articleList = Typecho_Widget::widget('AMP_Action')->MakeArticleList($sendtype, $page, 20);
     foreach ($articleList as $article) {
-        if (Helper::options()->plugin('AMP')->PostURL !== Helper::options()->index) {
-            $article['permalink'] = str_replace(Helper::options()->index, Helper::options()->plugin('AMP')->PostURL, $article['permalink']);//替换提交的前缀
+        if (Helper::options()->plugin('AMP')->postURL !== Helper::options()->index) {
+            $article['permalink'] = str_replace(Helper::options()->index, Helper::options()->plugin('AMP')->postURL, $article['permalink']);//替换提交的前缀
         }
         echo '正在提交:' . $article['permalink'] . " <br>";
         $urls[] = $article['permalink'];
