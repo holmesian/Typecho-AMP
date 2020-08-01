@@ -280,8 +280,8 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         //获取系统配置
         $options = Helper::options();
 
-        //如果文章属性为 隐藏 或 定时发布 或 非首次发布(编辑) 发布则不推送
-        if ('publish' != $contents['visibility'] || $contents['created'] > time() || !is_null($contents['created'])) {
+        //如果文章属性为 隐藏 或 定时发布 则不推送
+        if ('publish' != $contents['visibility'] || $contents['created'] > time() ) {
             return;
         }
 
