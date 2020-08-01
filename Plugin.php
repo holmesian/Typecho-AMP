@@ -78,10 +78,10 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         $form->addInput($element);
 
 
-        $element = new Typecho_Widget_Helper_Form_Element_Radio('AMPSitemap', array(0 => '关闭', 1 => '开启'), 1, _t('开启 AMP 的 SiteMap'), 'AMP SiteMap 地址：<a href="'.Helper::options()->index .'/amp_sitemap.xml">' . Helper::options()->index . '/amp_sitemap.xml</a>');
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('AMPSitemap', array(0 => '关闭', 1 => '开启'), 1, _t('开启 AMP 的 SiteMap'), 'AMP SiteMap 地址：<a href="'.Helper::options()->index .'/amp_sitemap.xml">' . Helper::options()->index . '/amp_sitemap.xml</a> ,分页在URL末尾加上page=x');
         $form->addInput($element);
 
-        $element = new Typecho_Widget_Helper_Form_Element_Radio('MIPSitemap', array(0 => '关闭', 1 => '开启'), 1, _t('开启 MIP 的 SiteMap'), 'MIP SiteMap 地址：<a href="'.Helper::options()->index .'/mip_sitemap.xml">'. Helper::options()->index . '/mip_sitemap.xml</a>');
+        $element = new Typecho_Widget_Helper_Form_Element_Radio('MIPSitemap', array(0 => '关闭', 1 => '开启'), 1, _t('开启 MIP 的 SiteMap'), 'MIP SiteMap 地址：<a href="'.Helper::options()->index .'/mip_sitemap.xml">'. Helper::options()->index . '/mip_sitemap.xml</a>  ,分页在URL末尾加上page=x');
         $form->addInput($element);
 
         $element = new Typecho_Widget_Helper_Form_Element_Radio('ampIndex', array(0 => '关闭', 1 => '开启'), 1, _t('开启 AMP 版的首页'), 'AMP Index 地址：<a href="'.Helper::options()->index.'/ampindex">' . Helper::options()->index . '/ampindex</a> <br> 受 AMP-LIST 控件限制，<b>非 HTTPS 站点</b>请勿开启 AMP 版首页');
