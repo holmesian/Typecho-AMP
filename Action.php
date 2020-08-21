@@ -111,7 +111,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->article = $this->getArticle($this->request->target);
 
         if (isset($this->article['isblank'])) {
-            throw new Typecho_Widget_Exception("不存在或已删除。<a href='{$this->baseurl}'>返回首页</a>");
+            throw new Typecho_Widget_Exception("受保护的文章或已删除。<a href='{$this->baseurl}'>返回首页</a>");
         }
         if (Helper::options()->plugin('AMP')->onlyForSpiders == 1) {//判断是否是对应的爬虫来访
             $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
@@ -281,7 +281,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $options = Helper::options();
 
         //如果文章属性为 隐藏 或 定时发布 则不推送
-        if ('publish' != $contents['visibility'] || $contents['created'] > time() ) {
+        if ('publish' != $contents['visibility'] || $contents['created'] > time()) {
             return;
         }
 
@@ -313,7 +313,6 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         }
 
 
-
         //获取文章链接
         $url = $article['mipurl'];
 
@@ -324,7 +323,6 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         );
 
         Typecho_Widget::widget('AMP_Action')->del($hash);
-
 
 
         //发送自动提交
@@ -362,6 +360,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     private function getArticleBySlug($slug)
     {
         $select = $this->db->select()->from('table.contents')
+            ->where('status = ?', "publish")->where(" password is null  ")  //2020.08.21 Fix https://github.com/holmesian/Typecho-AMP/issues/43
             ->where('slug = ?', $slug);
         $article = $this->ArticleBase($select);
         return $article;
@@ -370,6 +369,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     private function getArticleByCid($cid)
     {
         $select = $this->db->select()->from('table.contents')
+            ->where('status = ?', "publish")->where(" password is null  ")  //2020.08.21 Fix https://github.com/holmesian/Typecho-AMP/issues/43
             ->where('cid = ?', $cid);
         $article = $this->ArticleBase($select);
         return $article;
