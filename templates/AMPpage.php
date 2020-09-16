@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <script async src="https://cdn.ampproject.org/v0.js"></script>
     <title><?php echo($AMPpage['title']); ?></title>
-    <link rel="canonical" href="<?php echo($AMPpage['permalink']); ?>"/>
+    <link rel="canonical" href="<?php echo($AMPpage['ampurl']); ?>"/>
     <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
     <script type="application/ld+json">
       {
