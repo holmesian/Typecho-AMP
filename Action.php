@@ -227,7 +227,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
             $AMPpage = array(
                 'title' => $this->article['title'],
                 'permalink' => $this->article['permalink'],
-                'mipurl' => $this->article['mipurl'],
+                'ampurl' => $this->article['ampurl'],
                 'modified' => date('F j, Y', $this->article['modified']),
                 'date' => $this->article['date']->format('F j, Y'),
                 'author' => $this->article['author'],
