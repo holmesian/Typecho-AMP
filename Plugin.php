@@ -127,7 +127,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 
         $installDb = Typecho_Db::get();
         try {
-            $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . 'PageCache');
+            $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . 'pagecache');
             $msg = '缓存表删除成功|';
             $msg = $msg . self::call_me('uninstall').'|';
             return $msg;
