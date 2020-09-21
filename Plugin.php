@@ -127,7 +127,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 
         $installDb = Typecho_Db::get();
         try {
-            $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . 'PageCache');
+            $installDb->query("DROP TABLE IF EXISTS " . $installDb->getPrefix() . 'pagecache');
             $msg = '缓存表删除成功|';
             $msg = $msg . self::call_me('uninstall').'|';
             return $msg;
@@ -176,7 +176,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         if(stristr($installDb->getAdapterName(),'mysql')== false){
             return('[缓存]暂不支持 MySQL 以外的数据库.');
         }
-        $cacheTable =  $installDb->getPrefix() . 'PageCache';
+        $cacheTable =  $installDb->getPrefix() . 'pagecache';
         try {
             $installDb->query("DROP TABLE IF EXISTS " . $cacheTable);
             $installDb->query("CREATE TABLE `$cacheTable` (
@@ -185,7 +185,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
                         `dateline` int(10)      NOT NULL DEFAULT '0',
                         `expire`   int(8)       NOT NULL DEFAULT '0',
                         UNIQUE KEY `hash` (`hash`)
-                        ) DEFAULT CHARSET=utf8");
+                        ) DEFAULT CHARSET=utf8mb4");
             return('缓存表创建成功！');
         } catch (Typecho_Db_Exception $e) {
             return('缓存表建立失败，错误代码：'. $e->getCode().'|'.$e->getMessage());

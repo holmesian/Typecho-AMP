@@ -13,7 +13,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         parent::__construct($request, $response, $params);
         $this->LOGO = Helper::options()->plugin('AMP')->LOGO;//同时为默认图片
         $this->db = Typecho_Db::get();
-        $this->tablename = $this->db->getPrefix() . 'PageCache';
+        $this->tablename = $this->db->getPrefix() . 'pagecache';
         $this->baseurl = Helper::options()->index;
         $this->baseurl = str_replace("https://", "//", $this->baseurl);
         $this->baseurl = str_replace("http://", "//", $this->baseurl);
