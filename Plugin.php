@@ -4,14 +4,14 @@
  *
  * @package AMP-MIP
  * @author Holmesian
- * @version 0.7.6.3
+ * @version 0.7.6.4
  * @link https://holmesian.org/AMP-for-Typecho
  */
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 class AMP_Plugin implements Typecho_Plugin_Interface
 {
-    public static $version = '0.7.6.3';
+    public static $version = '0.7.6.4';
 
     public static function activate()
     {
@@ -180,7 +180,7 @@ class AMP_Plugin implements Typecho_Plugin_Interface
         try {
             $installDb->query("DROP TABLE IF EXISTS " . $cacheTable);
             $installDb->query("CREATE TABLE `$cacheTable` (
-                        `hash`     varchar(200) NOT NULL,
+                        `hash`     varchar(190) NOT NULL,
                         `cache`    longtext     NOT NULL,
                         `dateline` int(10)      NOT NULL DEFAULT '0',
                         `expire`   int(8)       NOT NULL DEFAULT '0',
