@@ -181,6 +181,10 @@ class AMP_Plugin implements Typecho_Plugin_Interface
 
         $sql=self::createTableByType($installDb->getAdapterName());
 
+        if ($sql==false) {
+            return('[缓存]暂时只支持 MySQL 和 SQLite 数据库.');
+        }
+
         $dataTableName = Typecho_Db::get()->getPrefix() . AMP_Plugin::$cacheTable;
 
         try {

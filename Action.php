@@ -112,7 +112,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->article = $this->getArticle($this->request->target);
 
         if (isset($this->article['isblank'])) {
-            throw new Typecho_Widget_Exception("受保护的文章或已删除。<a href='{$this->baseurl}'>返回首页</a>");
+            throw new Typecho_Plugin_Exception(_t('受保护的文章或已删除。'), 404);
         }
         if (Helper::options()->plugin('AMP')->onlyForSpiders == 1) {//判断是否是对应的爬虫来访
             $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
@@ -216,7 +216,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
         $this->article = $this->getArticle($this->request->target);
         if (isset($this->article['isblank'])) {
-            throw new Typecho_Widget_Exception('不存在或已删除');
+            throw new Typecho_Plugin_Exception(_t('受保护的文章或已删除。'), 404);
         }
         if (Helper::options()->plugin('AMP')->onlyForSpiders == 1) {//判断是否是对应的爬虫来访
             $userAgent = strtolower($_SERVER['HTTP_USER_AGENT']);
