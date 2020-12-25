@@ -12,9 +12,10 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     {
         parent::__construct($request, $response, $params);
         $this->LOGO = Helper::options()->plugin('AMP')->LOGO;//同时为默认图片
-        $this->db = Typecho_Db::get();
-        $this->tablename = $this->db->getPrefix() . 'pagecache';
-        $this->baseurl = Helper::options()->index;
+        $this->cacheDB = Typecho_Db::get();
+        $this->tablename = $this->cacheDB->getPrefix() . AMP_Plugin::$cacheTable;
+
+        $this->baseurl = Helper::options()->index;//获取首页地址，并进行协议无相关化处理
         $this->baseurl = str_replace("https://", "//", $this->baseurl);
         $this->baseurl = str_replace("http://", "//", $this->baseurl);
     }
@@ -24,7 +25,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
      * @throws Typecho_Plugin_Exception
      * author:Holmesian
      * date: 2020/3/13 11:45
-     * 添加头部信息
+     * 在原始页面添加MIP/AMP连接的头部信息
      */
     public static function headlink()
     {
@@ -40,11 +41,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
         if ($widget->is('post')) {//文章页
             $targetTemp = Typecho_Widget::widget('AMP_Action')->getUrlRule();//静态函数调用动态函数
-            if (isset($widget->request->cid)) {
+            if (isset($widget->request->cid)) {//根据文章cid调用
                 $cid = $widget->request->cid;
                 $target = str_replace('[cid:digital]', $cid, $targetTemp);
             }
-            if (isset($widget->request->slug)) {
+            if (isset($widget->request->slug)) {//根据文章别名调用
                 $slug = $widget->request->slug;
                 $target = str_replace('[slug]', $slug, $targetTemp);
             }
@@ -68,10 +69,10 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
      * date: 2020/3/13 11:45
      * 生成 AMP sitemap
      */
-    public function AMPSitemap()
+    public function AMPSiteMap()
     {
 
-        if (Helper::options()->plugin('AMP')->AMPSitemap == 0) {
+        if (Helper::options()->plugin('AMP')->AMPSiteMapConfig == 0) {
             throw new Typecho_Widget_Exception('未开启 AMPSitemap 功能！');
         }
 
@@ -86,10 +87,10 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
      * date: 2020/3/13 11:45
      * 生成 MIP sitemap
      */
-    public function MIPSitemap()
+    public function MIPSiteMap()
     {
 
-        if (Helper::options()->plugin('AMP')->MIPSitemap == 0) {
+        if (Helper::options()->plugin('AMP')->MIPSiteMapConfig == 0) {
             throw new Typecho_Widget_Exception('未开启 MIPSitemap 功能！');
         }
 
@@ -187,6 +188,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         print(json_encode($arr));
     }
 
+
+    /**
+     * @throws Typecho_Plugin_Exception
+     * AMP首页
+     */
     public function AMPindex()
     {
 
@@ -359,7 +365,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     private function getArticleBySlug($slug)
     {
-        $select = $this->db->select()->from('table.contents')
+        $select = $this->cacheDB->select()->from('table.contents')
             ->where('status = ?', "publish")->where(" password is null  ")  //2020.08.21 Fix https://github.com/holmesian/Typecho-AMP/issues/43
             ->where('slug = ?', $slug);
         $article = $this->ArticleBase($select);
@@ -368,7 +374,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     private function getArticleByCid($cid)
     {
-        $select = $this->db->select()->from('table.contents')
+        $select = $this->cacheDB->select()->from('table.contents')
             ->where('status = ?', "publish")->where(" password is null  ")  //2020.08.21 Fix https://github.com/holmesian/Typecho-AMP/issues/43
             ->where('cid = ?', $cid);
         $article = $this->ArticleBase($select);
@@ -377,14 +383,14 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
     private function ArticleBase($select)
     {
-        $article_src = $this->db->fetchRow($select);
+        $article_src = $this->cacheDB->fetchRow($select);
 
         if (count($article_src) > 0) {
             $article = Typecho_Widget::widget("Widget_Abstract_Contents")->push($article_src);
-            $select = $this->db->select('table.users.screenName')
+            $select = $this->cacheDB->select('table.users.screenName')
                 ->from('table.users')
                 ->where('uid = ?', $article['authorId']);
-            $author = $this->db->fetchRow($select);
+            $author = $this->cacheDB->fetchRow($select);
             $article['author'] = $author['screenName'];
             if ($article['isMarkdown'] == True) {
                 $article['text'] = Markdown::convert($article['text']);
@@ -460,7 +466,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     }
 
 
-    //获取文章内图片
+    /**
+     * @return array|null
+     * @throws Typecho_Exception
+     * 获取文章内图片
+     */
     private function GetPostImg()
     {
 
@@ -536,7 +546,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         return $text;
     }
 
-    //初始化AMP信息
+    /**
+     * @param $text
+     * @return string|string[]|null
+     * 初始化AMP信息 修改相关的内容
+     */
     private function AMPInit($text)
     {
         $text = $this->IMGsize($text);
@@ -551,7 +565,11 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
         return $text;
     }
 
-    //修正img标签的尺寸数据
+    /**
+     * @param $html
+     * @return string|string[]|null
+     * 修正img标签的尺寸数据
+     */
     private function IMGsize($html)
     {
         $html = preg_replace_callback(
@@ -753,7 +771,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     private function set($key, $cache)
     {
         if (Helper::options()->plugin('AMP')->cacheTime > 0) {
-            $installDb = $this->db;
+            $installDb = $this->cacheDB;
             $time = (int)Helper::options()->plugin('AMP')->cacheTime;
             $expire = $time * 60 * 60;
             if (is_array($cache)) $cache = json_encode($cache);
@@ -774,7 +792,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     private function del($key)
     {
         if (Helper::options()->plugin('AMP')->cacheTime > 0) {
-            $installDb = $this->db;
+            $installDb = $this->cacheDB;
             if (is_array($key)) {
                 foreach ($key as $k => $v) {
                     $this->del($v);
@@ -794,7 +812,7 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
     private function get($key)
     {
         if (Helper::options()->plugin('AMP')->cacheTime > 0) {
-            $installDb = $this->db;
+            $installDb = $this->cacheDB;
 
             $condition = $installDb->select('cache', 'dateline', 'expire')->from($this->tablename)->where('hash = ?', $key);
             $row = $installDb->fetchRow($condition);
