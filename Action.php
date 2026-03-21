@@ -392,6 +392,12 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
                 ->where('uid = ?', $article['authorId']);
             $author = $this->cacheDB->fetchRow($select);
             $article['author'] = $author['screenName'];
+            if (isset($article['text'])) {
+                $article['isMarkdown'] = (0 === strpos($article['text'], '<!--markdown-->'));
+                if ($article['isMarkdown']) {
+                    $article['text'] = substr($article['text'], 15);
+                }
+            }
             if ($article['isMarkdown'] == True) {
                 $article['text'] = Markdown::convert($article['text']);
             } else {
