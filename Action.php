@@ -387,11 +387,34 @@ class AMP_Action extends Typecho_Widget implements Widget_Interface_Do
 
         if (count($article_src) > 0) {
             $article = Typecho_Widget::widget("Widget_Abstract_Contents")->push($article_src);
+            
+            // 修复由于 Widget_Abstract_Contents 无法正确初始化路由而导致 permalink 为空的问题
+            if (empty($article['permalink'])) {
+                $categories = $this->cacheDB->fetchAll($this->cacheDB->select()->from('table.metas')
+                    ->join('table.relationships', 'table.relationships.mid = table.metas.mid')
+                    ->where('table.relationships.cid = ?', $article['cid'])
+                    ->where('table.metas.type = ?', 'category')
+                    ->order('table.metas.order', Typecho_Db::SORT_ASC));
+                $article['category'] = urlencode(current(Typecho_Common::arrayFlatten($categories, 'slug')));
+                $article['directory'] = Typecho_Common::arrayFlatten($categories, 'slug');
+                $date = new Typecho_Date($article['created']);
+                $article['year'] = $date->year;
+                $article['month'] = $date->month;
+                $article['day'] = $date->day;
+                $article['permalink'] = Typecho_Router::url('post', $article, Helper::options()->index);
+            }
+
             $select = $this->cacheDB->select('table.users.screenName')
                 ->from('table.users')
                 ->where('uid = ?', $article['authorId']);
             $author = $this->cacheDB->fetchRow($select);
             $article['author'] = $author['screenName'];
+            if (isset($article['text'])) {
+                $article['isMarkdown'] = (0 === strpos($article['text'], '<!--markdown-->'));
+                if ($article['isMarkdown']) {
+                    $article['text'] = substr($article['text'], 15);
+                }
+            }
             if ($article['isMarkdown'] == True) {
                 $article['text'] = Markdown::convert($article['text']);
             } else {
